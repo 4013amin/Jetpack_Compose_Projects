@@ -1,5 +1,7 @@
 package com.example.jetpackshop.shop
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -11,12 +13,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,14 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ComponentActivity
 import com.example.jetpackshop.R
-import com.example.jetpackshop.navigations.nav
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
@@ -47,14 +43,14 @@ class Main : androidx.activity.ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-                MyForm()
+                MyForm(LocalContext.current)
             }
         }
     }
 }
 
 @Composable
-fun MyForm() {
+fun MyForm(context: Context) {
     var name by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var productName by remember { mutableStateOf("") }
@@ -67,13 +63,12 @@ fun MyForm() {
             .fillMaxSize()
             .fillMaxHeight()
             .background(
-                color = colorResource(id = R.color.white_new),
+                color = colorResource(id = R.color.white),
                 shape = RoundedCornerShape(10.dp),
-            )
-        ,
+            ),
         Alignment.Center,
 
-    ) {
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -85,32 +80,32 @@ fun MyForm() {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") }
+                label = { Text("نام") }
             )
             OutlinedTextField(
                 value = lastName,
                 onValueChange = { lastName = it },
-                label = { Text("Last Name") }
+                label = { Text("نام خانوادگی") }
             )
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
-                label = { Text("Product Name") }
+                label = { Text("نام کالا") }
             )
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") }
+                label = { Text("توضیحات") }
             )
             OutlinedTextField(
                 value = date,
                 onValueChange = { date = it },
-                label = { Text("Date") }
+                label = { Text("تاریخ") }
             )
             OutlinedTextField(
                 value = price,
                 onValueChange = { price = it },
-                label = { Text("Price") }
+                label = { Text("قیمت") }
             )
 
             Button(
@@ -121,15 +116,26 @@ fun MyForm() {
                         productName,
                         description,
                         date,
-                        price
+                        price,
+                        context
                     )
+
                 },
                 modifier = Modifier
                     .padding(vertical = 16.dp)
                     .align(Alignment.CenterHorizontally)
             ) {
-                Text("Submit")
+                Text("ثبت کردن")
             }
+
+            Button(onClick = {
+                val intent = Intent(context, Get_Data::class.java)
+                // اجرای Intent برای انتقال به صفحه دیگر
+                context.startActivity(intent)
+            }) {
+                Text(text = "نمایش کاربران")
+            }
+            
         }
     }
 }
@@ -141,7 +147,8 @@ private fun sendRequest(
     productName: String,
     description: String,
     date: String,
-    price: String
+    price: String,
+    context: Context
 ) {
     GlobalScope.launch(Dispatchers.IO) {
         val response = try {
@@ -152,7 +159,7 @@ private fun sendRequest(
                     last_name = lastName,
                     name = name,
                     price = price,
-                    product_name = productName
+                    product_name = productName,
                 )
             )
         } catch (e: IOException) {
@@ -165,8 +172,13 @@ private fun sendRequest(
 
         if (response.isSuccessful && response.body() != null) {
             Log.i("Amin", "Request successful: ${response.message()}")
+            val intent = Intent(context, Get_Data::class.java)
+            // اجرای Intent برای انتقال به صفحه دیگر
+            context.startActivity(intent)
+            return@launch
         } else {
             Log.e("Amin", "Request failed: ${response.message()}")
+            return@launch
         }
     }
 }
@@ -190,5 +202,5 @@ private fun sendRequest(
 @Preview(showBackground = true)
 @Composable
 fun ui() {
-    MyForm()
+    MyForm(LocalContext.current)
 }

@@ -16,6 +16,11 @@
         android:theme="@style/Theme.JetPackShop"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
+        <activity android:name=".shop.Get_Data">
+
+        </activity>
+
         <activity
             android:name=".shop.Main"
             android:exported="true"
