@@ -64,6 +64,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.0-alpha05")
     implementation("androidx.compose.ui:ui:1.7.0-alpha05")
     implementation("androidx.activity:activity-compose:1.9.0-beta01")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.35.0-alpha")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

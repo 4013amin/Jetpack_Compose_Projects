@@ -4,6 +4,7 @@ import com.example.jetpackshop.shop.data.models.Users_Model
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 
@@ -17,5 +18,11 @@ interface Api {
 
     @GET("/app/get_all_users")
     suspend fun get_data(): Response<Users_Model>
+
+
+    @DELETE("")
+    suspend fun delete_users(
+        @Body user_id: Int
+    ): Response<Users_Model>
 
 }

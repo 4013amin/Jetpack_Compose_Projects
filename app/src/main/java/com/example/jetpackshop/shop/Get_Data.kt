@@ -3,15 +3,15 @@ package com.example.jetpackshop.shop
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,11 +25,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.jetpackshop.shop.data.models.Users_Model
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -79,35 +79,55 @@ fun get_all_data_retrodit() {
 fun my_lazyCoumn(userList: List<Users_ModelItem>) {
     Card(modifier = Modifier.fillMaxWidth()) {
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(userList.size) {
-                uiGet(userList = userList, index = it)
-            }
+    }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = rememberLazyListState()
+    ) {
+        items(userList.size) {
+            CardItem(user = userList, index = it)
         }
     }
 }
 
 
 @Composable
-fun uiGet(userList: List<Users_ModelItem>, index: Int) {
-    var counter = userList[index]
-    Box(
+fun CardItem(user: List<Users_ModelItem>, index: Int) {
+    var count = user[index]
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(15.dp),
+            .padding(8.dp)
+            .background(color = Color.White),
+        shape = RoundedCornerShape(10.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = "${counter.name}", fontSize = 18.sp)
-            Text(text = "${counter.price}", fontSize = 18.sp)
-            Divider(thickness = 2.dp, color = Color.Red)
+            Text(text = "${count.name}", fontSize = 18.sp)
+            Text(text = "${count.price}", fontSize = 16.sp)
         }
     }
 }
+
+
+private fun delete_users(user: Users_ModelItem) {
+    GlobalScope.launch(Dispatchers.IO) {
+        try {
+//            retrofit_instance.api.delete_users(user.id) // فرضا id را برا
+        } catch (e: IOException) {
+            // خطای ورودی/خروجی
+            e.printStackTrace()
+        } catch (e: HttpException) {
+            // خطای HTTP
+            e.printStackTrace()
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
 fun show() {
-    uiGet(userList = arrayListOf(), index = 0)
+//    uiGet(userList = arrayListOf(), index = 0)
 }
