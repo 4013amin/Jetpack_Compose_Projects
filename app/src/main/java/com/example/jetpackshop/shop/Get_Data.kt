@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,14 +74,34 @@ fun get_all_data_retrodit() {
         }
 
     }
-    my_lazyCoumn(userList = userList)
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        DeleteAllButton { detectLongPress { (userList) } }
+        my_lazyCoumn(userList = userList)
+    }
+
+}
+
+@Composable
+fun DeleteAllButton(onLongClick: () -> Unit) {
+    Button(
+        onClick = { /* Short click */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .pointerInput(Unit) {
+                detectLongPress { /* Long click */
+                    onLongClick()
+                }
+            }
+    ) {
+        Text(text = "پاک کردن همه داده ها")
+    }
 }
 
 @Composable
 fun my_lazyCoumn(userList: List<Users_ModelItem>) {
-    Card(modifier = Modifier.fillMaxWidth()) {
 
-    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = rememberLazyListState()
@@ -111,16 +133,22 @@ fun CardItem(user: List<Users_ModelItem>, index: Int) {
 }
 
 
-private fun delete_users(user: Users_ModelItem) {
+private fun detectLongPress(user: () -> Unit) {
+
     GlobalScope.launch(Dispatchers.IO) {
-        try {
-//            retrofit_instance.api.delete_users(user.id) // فرضا id را برا
+        val response = try {
+            retrofit_instance.api.delete_all_users()
         } catch (e: IOException) {
-            // خطای ورودی/خروجی
-            e.printStackTrace()
+            return@launch
         } catch (e: HttpException) {
-            // خطای HTTP
-            e.printStackTrace()
+            return@launch
+        }
+
+        if (response.isSuccessful && response.body() != null) {
+            Log.e("Amin_delete", "request_is_ok ${response.message()}")
+
+        } else {
+            Log.e("Amin_delete", "Request failed: ${response.message()}")
         }
     }
 }
@@ -129,5 +157,5 @@ private fun delete_users(user: Users_ModelItem) {
 @Preview(showBackground = true)
 @Composable
 fun show() {
-//    uiGet(userList = arrayListOf(), index = 0)
+    my_lazyCoumn(arrayListOf())
 }

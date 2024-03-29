@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,10 +28,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.jetpackshop.R
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
@@ -58,6 +65,7 @@ fun MyForm(context: Context) {
     var date by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
 
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -69,73 +77,81 @@ fun MyForm(context: Context) {
         Alignment.Center,
 
         ) {
-        Column(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(15.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .wrapContentHeight()
+                .clip(CutCornerShape(20.dp))
         ) {
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("نام") }
-            )
-            OutlinedTextField(
-                value = lastName,
-                onValueChange = { lastName = it },
-                label = { Text("نام خانوادگی") }
-            )
-            OutlinedTextField(
-                value = productName,
-                onValueChange = { productName = it },
-                label = { Text("نام کالا") }
-            )
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("توضیحات") }
-            )
-            OutlinedTextField(
-                value = date,
-                onValueChange = { date = it },
-                label = { Text("تاریخ") }
-            )
-            OutlinedTextField(
-                value = price,
-                onValueChange = { price = it },
-                label = { Text("قیمت") }
-            )
-
-            Button(
-                onClick = {
-                    sendRequest(
-                        name,
-                        lastName,
-                        productName,
-                        description,
-                        date,
-                        price,
-                        context
-                    )
-
-                },
+            Column(
                 modifier = Modifier
-                    .padding(vertical = 16.dp)
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .padding(15.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("ثبت کردن")
-            }
 
-            Button(onClick = {
-                val intent = Intent(context, Get_Data::class.java)
-                // اجرای Intent برای انتقال به صفحه دیگر
-                context.startActivity(intent)
-            }) {
-                Text(text = "نمایش کاربران")
-            }
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("نام") }
+                )
+                OutlinedTextField(
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    label = { Text("نام خانوادگی") }
+                )
+                OutlinedTextField(
+                    value = productName,
+                    onValueChange = { productName = it },
+                    label = { Text("نام کالا") }
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("توضیحات") }
+                )
+                OutlinedTextField(
+                    value = date,
+                    onValueChange = { date = it },
+                    label = { Text("تاریخ") }
+                )
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text("قیمت") }
+                )
 
+                OutlinedButton(
+                    onClick = {
+                        sendRequest(
+                            name,
+                            lastName,
+                            productName,
+                            description,
+                            date,
+                            price,
+                            context
+                        )
+
+                    },
+
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Text("ثبت کردن")
+                }
+
+                OutlinedButton(onClick = {
+                    val intent = Intent(context, Get_Data::class.java)
+                    // اجرای Intent برای انتقال به صفحه دیگر
+                    context.startActivity(intent)
+                }) {
+                    Text(text = "نمایش کاربران", color = Color.Black)
+                }
+
+            }
         }
     }
 }

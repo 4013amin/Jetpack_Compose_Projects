@@ -20,9 +20,7 @@ interface Api {
     suspend fun get_data(): Response<Users_Model>
 
 
-    @DELETE("")
-    suspend fun delete_users(
-        @Body user_id: Int
-    ): Response<Users_Model>
+    @DELETE("/app/delete_all_user")
+    suspend fun delete_all_users(): Response<Users_Model>
 
 }
