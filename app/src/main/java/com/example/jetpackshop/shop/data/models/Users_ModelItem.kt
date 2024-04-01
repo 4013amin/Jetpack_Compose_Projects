@@ -7,4 +7,5 @@ data class Users_ModelItem(
     val name: String,
     val price: String,
     val product_name: String,
+    val id: Int?
 )

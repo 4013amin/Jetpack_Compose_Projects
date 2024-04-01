@@ -1,9 +1,12 @@
 package com.example.jetpackshop.shop
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,20 +111,23 @@ fun my_lazyCoumn(userList: List<Users_ModelItem>) {
         state = rememberLazyListState()
     ) {
         items(userList.size) {
-            CardItem(user = userList, index = it)
+
         }
     }
 }
 
-
 @Composable
-fun CardItem(user: List<Users_ModelItem>, index: Int) {
+fun CardItem(user: List<Users_ModelItem>, index: Int, context: Context) {
     var count = user[index]
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .background(color = Color.White),
+            .background(color = Color.White)
+            .clickable {
+                val intent = Intent(context, Show_details::class.java)
+                context.startActivity(intent)
+            },
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(
@@ -153,9 +160,8 @@ private fun detectLongPress(user: () -> Unit) {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
-fun show() {
-    my_lazyCoumn(arrayListOf())
+fun show_get() {
+
 }
