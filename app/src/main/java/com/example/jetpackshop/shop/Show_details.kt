@@ -40,7 +40,7 @@ fun get_data_by_id() {
 
             if (response.isSuccessful && response != null){
                 withContext(Dispatchers.Main){
-                    single_show_data()
+//                    single_show_data()
                 }
             }
         }
