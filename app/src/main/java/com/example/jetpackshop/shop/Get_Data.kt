@@ -31,6 +31,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
@@ -86,6 +92,7 @@ fun get_all_data_retrodit() {
 
 }
 
+
 @Composable
 fun DeleteAllButton(onLongClick: () -> Unit) {
     Button(
@@ -105,36 +112,37 @@ fun DeleteAllButton(onLongClick: () -> Unit) {
 
 @Composable
 fun my_lazyCoumn(userList: List<Users_ModelItem>) {
-
+    val navController = rememberNavController()
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = rememberLazyListState()
     ) {
         items(userList.size) {
-
+            CardItem(userList, it, navController)
         }
     }
 }
 
 @Composable
-fun CardItem(user: List<Users_ModelItem>, index: Int, context: Context) {
-    var count = user[index]
+fun CardItem(user: List<Users_ModelItem>, index: Int, navController: NavController) {
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .background(color = Color.White)
             .clickable {
-                val intent = Intent(context, Show_details::class.java)
-                context.startActivity(intent)
+                val name = user[index].name
+                navController.navigate("Show_details?name=$name")
             },
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = "${count.name}", fontSize = 18.sp)
-            Text(text = "${count.price}", fontSize = 16.sp)
+            Text(text = "${user[index].name}", fontSize = 18.sp)
+            Text(text = "${user[index].price}", fontSize = 16.sp)
         }
     }
 }

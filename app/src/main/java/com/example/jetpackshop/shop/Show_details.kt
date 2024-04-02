@@ -3,9 +3,18 @@ package com.example.jetpackshop.shop
 import android.icu.text.ListFormatter.Width
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.Dispatchers
@@ -19,33 +28,21 @@ class Show_details : androidx.activity.ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-                
+                val navController = rememberNavController()
+                ShowDetails(navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun get_data_by_id() {
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(key1 = true){
-        scope.launch (Dispatchers.IO){
-            val response = try {
-                retrofit_instance.api.get_data()
-            }catch (e : IOException){
-                return@launch
-            }catch (e : HttpException){
-                return@launch
-            }
+fun ShowDetails(navController: NavController) {
+    val name = navController.currentBackStackEntry
+        ?.arguments?.getString("name") ?: ""
 
-            if (response.isSuccessful && response != null){
-                withContext(Dispatchers.Main){
-//                    single_show_data()
-                }
-            }
-        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(text = "Name: $name", fontSize = 18.sp, modifier = Modifier.padding(16.dp))
     }
-
 }
 
 

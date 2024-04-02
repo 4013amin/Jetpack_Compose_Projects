@@ -22,10 +22,10 @@ interface Api {
     suspend fun get_data(): Response<Users_Model>
 
 
-    @GET()
-    suspend fun get_data_by_id(
-        @Path("id") id: Int,
-    ): Response<Users_ModelItem>
+//    @GET()
+//    suspend fun get_data_by_id(
+//        @Path("id") id: Int,
+//    ): Response<Users_ModelItem>
 
     @DELETE("/app/delete_all_user")
     suspend fun delete_all_users(): Response<Users_Model>
