@@ -174,7 +174,6 @@ private fun sendRequest(
                     name = name,
                     price = price,
                     product_name = productName,
-                    id = null
                 )
             )
         } catch (e: IOException) {

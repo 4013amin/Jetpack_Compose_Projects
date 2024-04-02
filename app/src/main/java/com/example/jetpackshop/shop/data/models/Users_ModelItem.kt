@@ -6,6 +6,5 @@ data class Users_ModelItem(
     val last_name: String,
     val name: String,
     val price: String,
-    val product_name: String,
-    val id: Int?
+    val product_name: String
 )
