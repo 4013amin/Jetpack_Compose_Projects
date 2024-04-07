@@ -5,6 +5,6 @@ object urls {
     //RandomFact
     //http://catfact.ninja/fact
 
-    const val baseurl = "http://192.168.1.110:3030/"
+    const val baseurl = "http://192.168.1.104:3030/"
 
 }
