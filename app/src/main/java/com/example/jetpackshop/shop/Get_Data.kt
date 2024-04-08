@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -52,46 +53,44 @@ class Get_Data : androidx.activity.ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-
+                get_data_retrofit()
             }
         }
     }
 
     @Composable
-    fun get_all_data_retrodit(navigateToShowDetails: (String) -> Unit) {
-        var userList by remember {
-            mutableStateOf(listOf<Users_ModelItem>())
-        }
+    fun get_data_retrofit() {
         val scope = rememberCoroutineScope()
         LaunchedEffect(key1 = true) {
             scope.launch(Dispatchers.IO) {
                 val response = try {
                     retrofit_instance.api.get_data()
                 } catch (e: IOException) {
-                    Log.e("Amin_getData", "${e.message}")
                     return@launch
                 } catch (e: HttpException) {
-                    Log.e("Amin_getData", "${e.message}")
                     return@launch
                 }
-
                 if (response.isSuccessful && response.body() != null) {
                     withContext(Dispatchers.Main) {
-                        userList = response.body()!!
+                        userlist = response.body()!!
                     }
                 }
             }
-
         }
+    }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            my_lazyCoumn(userList = userList, navigateToShowDetails)
+    @Composable
+    fun my_lazy_column(userlist: List<Users_ModelItem>) {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            items(userlist.size) {
+                CardItem(user = userlist, index = it)
+            }
         }
     }
 
 
     @Composable
-    fun DeleteAllButton(onLongClick: () -> Unit) {
+    private fun DeleteAllButton(onLongClick: () -> Unit) {
         Button(
             onClick = { /* Short click */ },
             modifier = Modifier
@@ -107,19 +106,7 @@ class Get_Data : androidx.activity.ComponentActivity() {
 
 
     @Composable
-    fun my_lazyCoumn(userList: List<Users_ModelItem>, navigateToShowDetails: (String) -> Unit) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = rememberLazyListState()
-        ) {
-            items(userList.size) {
-                CardItem(userList, it, navigateToShowDetails)
-            }
-        }
-    }
-
-    @Composable
-    fun CardItem(user: List<Users_ModelItem>, index: Int, navigateToShowDetails: (String) -> Unit) {
+    fun CardItem(user: List<Users_ModelItem>, index: Int) {
         val context = LocalContext.current
 
         Card(
@@ -141,10 +128,4 @@ class Get_Data : androidx.activity.ComponentActivity() {
         }
     }
 
-
-    @Preview(showBackground = true)
-    @Composable
-    fun show_get() {
-
-    }
 }
