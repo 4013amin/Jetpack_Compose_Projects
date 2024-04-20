@@ -13,7 +13,6 @@ object retrofit_instance {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(Api::class.java)
-
     }
 
 }
