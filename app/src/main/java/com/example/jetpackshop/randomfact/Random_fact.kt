@@ -29,7 +29,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpackshop.shop.data.models.Facts
+import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
+import com.example.jetpackshop.shop.single_row
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -101,5 +103,5 @@ fun my_ui_facts(list_fact: MutableState<Facts>) {
 @Preview(name = "fact", showBackground = true)
 @Composable
 private fun show_fact() {
-    my_ui_facts(facts)
+    single_row(user = Users_ModelItem())
 }
