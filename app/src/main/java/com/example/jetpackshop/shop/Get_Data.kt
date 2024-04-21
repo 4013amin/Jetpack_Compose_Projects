@@ -2,6 +2,7 @@ package com.example.jetpackshop.shop
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -43,6 +45,7 @@ class Get_Data : androidx.activity.ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
+
                 get_data_retrofit()
             }
         }
@@ -56,6 +59,8 @@ fun get_data_retrofit() {
     }
 
     val scope = rememberCoroutineScope()
+    var scroller = rememberScrollState()
+
     LaunchedEffect(key1 = true) {
         scope.launch(Dispatchers.IO) {
             val response = try {
@@ -73,11 +78,11 @@ fun get_data_retrofit() {
         }
     }
 
-    lazycolumn(userlist = userlist)
+    lazycolumn(userlist = userlist, scroller = scroller)
 }
 
 @Composable
-fun lazycolumn(userlist: List<Users_ModelItem>) {
+fun lazycolumn(userlist: List<Users_ModelItem>, scroller: ScrollState) {
     Button(
         onClick = { deleteRetrofit() }, modifier = Modifier
             .fillMaxWidth()
@@ -133,5 +138,5 @@ private fun deleteRetrofit() {
 @Preview(showBackground = true)
 @Composable
 private fun show_get() {
-    lazycolumn(userlist = arrayListOf())
+    lazycolumn(userlist = arrayListOf(), scroller = ScrollState(1))
 }
