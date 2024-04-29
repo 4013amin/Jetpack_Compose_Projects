@@ -61,6 +61,7 @@ fun get_data_retrofit() {
     val scope = rememberCoroutineScope()
     var scroller = rememberScrollState()
 
+
     LaunchedEffect(key1 = true) {
         scope.launch(Dispatchers.IO) {
             val response = try {
