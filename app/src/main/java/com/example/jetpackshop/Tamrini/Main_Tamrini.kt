@@ -32,14 +32,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpackshop.Tamrini.data.api.api_inter
+import com.example.jetpackshop.Tamrini.data.models.Models_Tamrini
 import com.example.jetpackshop.Tamrini.data.models.Models_TamriniItem
 import com.example.jetpackshop.Tamrini.data.utils.retrofit_Inter
 import com.example.jetpackshop.shop.MyForm
+import com.example.jetpackshop.shop.data.models.Facts
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.IOException
+
+var users = mutableStateOf(Models_Tamrini())
 
 class Main_Tamrini : androidx.activity.ComponentActivity() {
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
@@ -109,6 +114,23 @@ fun single_items(userlis: List<Models_TamriniItem>) {
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+private fun delete_data_retrofit() {
+    GlobalScope.launch(Dispatchers.IO) {
+        var response = try {
+            retrofit_Inter.api.delete_data()
+        } catch (e: IOException) {
+            return@launch
+        } catch (e: HttpException) {
+            return@launch
+        }
+        if (response.isSuccessful && response.body() != null) {
+            with(Dispatchers.Main) {
+                users.value = response.body()!!
+            }
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
