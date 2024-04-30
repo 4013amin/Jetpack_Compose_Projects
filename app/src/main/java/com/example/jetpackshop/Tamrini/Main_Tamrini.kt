@@ -37,6 +37,8 @@ import com.example.jetpackshop.Tamrini.data.utils.retrofit_Inter
 import com.example.jetpackshop.shop.MyForm
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
 
 class Main_Tamrini : androidx.activity.ComponentActivity() {
@@ -58,22 +60,24 @@ fun Get_data_tamrini() {
     var userlist by remember {
         mutableStateOf(listOf<Models_TamriniItem>())
     }
-
     var scope = rememberCoroutineScope()
     var scroller = rememberScrollState()
+
     LaunchedEffect(key1 = true) {
-        var response = try {
-            retrofit_Inter.api.get_data_tamrini()
-        } catch (e: IOException) {
-            return@LaunchedEffect
-        } catch (e: HttpException) {
-            return@LaunchedEffect
-        }
-        if (response.isSuccessful && response.body() != null) {
-            userlist = response.body()!!
+        scope.launch(Dispatchers.IO) {
+            var response = try {
+                retrofit_Inter.api.get_data_tamrini()
+            } catch (e: IOException) {
+                return@launch
+            } catch (e: HttpException) {
+                return@launch
+            }
+
+            if (response.isSuccessful && response.body() != null) {
+                userlist = response.body()!!
+            }
         }
     }
-    single_items(userlis = userlist)
 
 }
 
