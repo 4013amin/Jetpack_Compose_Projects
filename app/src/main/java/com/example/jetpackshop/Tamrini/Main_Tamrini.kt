@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,7 +85,7 @@ fun Get_data_tamrini() {
             }
         }
     }
-
+    single_items(userlis = userlist)
 }
 
 //@Composable
@@ -95,8 +97,19 @@ fun Get_data_tamrini() {
 //    }
 //}
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun single_items(userlis: List<Models_TamriniItem>) {
+
+    Button(
+        onClick = { delete_button() }, modifier = Modifier
+            .fillMaxWidth()
+            .padding(15.dp)
+            .background(color = Color.Green), shape = RoundedCornerShape(15.dp)
+    ) {
+        Text(text = "Delete All Data .....", fontSize = 18.sp)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         state = rememberLazyListState()
@@ -114,8 +127,9 @@ fun single_items(userlis: List<Models_TamriniItem>) {
     }
 }
 
+
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-private fun delete_data_retrofit() {
+private fun delete_button() {
     GlobalScope.launch(Dispatchers.IO) {
         var response = try {
             retrofit_Inter.api.delete_data()
@@ -131,6 +145,7 @@ private fun delete_data_retrofit() {
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

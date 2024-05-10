@@ -156,7 +156,7 @@ fun MyForm(context: Context) {
 }
 
 
-private fun sendRequest(
+fun sendRequest(
     name: String,
     lastName: String,
     productName: String,
