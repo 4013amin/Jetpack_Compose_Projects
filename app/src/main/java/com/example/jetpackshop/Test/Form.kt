@@ -33,6 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.example.jetpackshop.R
+import com.example.jetpackshop.Tamrini.data.api.api_inter
+import com.example.jetpackshop.Test.Api_Testi
 import com.example.jetpackshop.Test.Model_Testi
 import com.example.jetpackshop.Test.Utils_testi
 import com.example.jetpackshop.shop.MyForm
@@ -136,23 +138,25 @@ fun senRequest(
     number2: String,
 ) {
 
-    GlobalScope.launch(Dispatchers.IO) {
-        var response = try {
-            Utils_testi.api.send_request(
-                Model_Testi(
-                    name = name,
-                    number1 = number1,
-                    number2 = number2
-                )
-            )
-        } catch (e: IOException) {
-            return@launch
-        } catch (e: HttpException) {
-            return@launch
-        }
-        if (response.isSuccessful && response.body() != null) {
-            Log.i("Amin_class_testi", "Request successful: ${response.message()}")
-        }
-    }
 
 }
+
+
+//GlobalScope.launch(Dispatchers.IO) {
+//    var response = try {
+//        Utils_testi.api.send_request(
+//            Model_Testi(
+//                name = name,
+//                number1 = number1,
+//                number2 = number2
+//            )
+//        )
+//    } catch (e: IOException) {
+//        return@launch
+//    } catch (e: HttpException) {
+//        return@launch
+//    }
+//    if (response.isSuccessful && response.body() != null) {
+//        Log.i("Amin_class_testi", "Request successful: ${response.message()}")
+//    }
+//}
