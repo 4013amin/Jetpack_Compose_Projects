@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.0-beta01")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.35.0-alpha")
     implementation("androidx.compose.material3:material3:1.3.0-alpha03")
+    implementation("androidx.datastore:datastore-core-android:1.1.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
