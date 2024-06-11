@@ -1,5 +1,6 @@
 package com.example.jetpackshop.Tamrini_new
 
+import android.annotation.SuppressLint
 import android.net.http.HttpException
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.jetpackshop.Tamrini_new.data.models_new.Models_newItem
 import com.example.jetpackshop.Tamrini_new.data.retrodit_new.Retrofit_new
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +37,7 @@ class Tamrini : androidx.activity.ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            show_data_retrofit()
+            MainScreen()
         }
     }
 }
@@ -40,10 +45,28 @@ class Tamrini : androidx.activity.ComponentActivity() {
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
+fun MainScreen() {
+//    val navController = rememberNavController()
+//
+//    NavHost(navController = navController, startDestination = "show_data_retrofit") {
+//        composable("show_data_retrofit") { show_data_retrofit(navController) }
+//        composable("send_data_screen") { SendDataScreen(navController) }
+//    }
+    show_data_retrofit()
+}
+
+@Composable
+fun SendDataScreen() {
+
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+@RequiresApi(Build.VERSION_CODES.S)
+@Composable
 fun show_data_retrofit() {
     var data by remember { mutableStateOf(listOf<Models_newItem>()) }
     var searchText by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -63,28 +86,44 @@ fun show_data_retrofit() {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // TextField برای ورودی جستجو
-        TextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            placeholder = { Text(text = "Search...") }
-        )
-        // فیلتر کردن داده‌ها براساس متن جستجو
-        val filteredData = if (searchText.isEmpty()) {
-            data
-        } else {
-            data.filter {
-                it.title.contains(searchText, ignoreCase = true) ||
-                        it.body.contains(searchText, ignoreCase = true)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { },
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text("+")
+            }
+        },
+        content = {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // TextField برای ورودی جستجو
+                TextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    placeholder = { Text(text = "Search...") }
+                )
+                // فیلتر کردن داده‌ها براساس متن جستجو
+                val filteredData = if (searchText.isEmpty()) {
+                    data
+                } else {
+                    data.filter {
+                        it.title.contains(searchText, ignoreCase = true) ||
+                                it.body.contains(searchText, ignoreCase = true)
+                    }
+                }
+                // نمایش لیست فیلتر شده
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(filteredData) { user ->
+                        show_data_ui(user)
+                    }
+                }
             }
         }
-        // نمایش لیست فیلتر شده
-        lazycolumn(data = filteredData, scroller = scrollState)
-    }
+    )
 }
 
 @Composable
