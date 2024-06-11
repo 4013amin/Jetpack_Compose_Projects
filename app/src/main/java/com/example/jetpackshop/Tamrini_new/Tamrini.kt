@@ -8,29 +8,20 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.jetpackshop.Tamrini_new.data.models_new.Models_new
 import com.example.jetpackshop.Tamrini_new.data.models_new.Models_newItem
 import com.example.jetpackshop.Tamrini_new.data.retrodit_new.Retrofit_new
-import com.example.jetpackshop.shop.data.models.Users_ModelItem
-import com.example.jetpackshop.shop.single_row
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -51,6 +42,7 @@ class Tamrini : androidx.activity.ComponentActivity() {
 @Composable
 fun show_data_retrofit() {
     var data by remember { mutableStateOf(listOf<Models_newItem>()) }
+    var searchText by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -70,20 +62,39 @@ fun show_data_retrofit() {
             }
         }
     }
-    lazycolumn(data = data, scroller = scrollState)
-}
 
+    Column(modifier = Modifier.fillMaxSize()) {
+        // TextField برای ورودی جستجو
+        TextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            placeholder = { Text(text = "Search...") }
+        )
+        // فیلتر کردن داده‌ها براساس متن جستجو
+        val filteredData = if (searchText.isEmpty()) {
+            data
+        } else {
+            data.filter {
+                it.title.contains(searchText, ignoreCase = true) ||
+                        it.body.contains(searchText, ignoreCase = true)
+            }
+        }
+        // نمایش لیست فیلتر شده
+        lazycolumn(data = filteredData, scroller = scrollState)
+    }
+}
 
 @Composable
 fun lazycolumn(data: List<Models_newItem>, scroller: ScrollState) {
-
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         items(data) { user ->
             show_data_ui(user)
         }
     }
 }
-
 
 @Composable
 fun show_data_ui(user: Models_newItem) {
