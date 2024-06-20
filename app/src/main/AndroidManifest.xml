@@ -22,7 +22,7 @@
         </activity>
 
         <activity
-            android:name=".Tamrini_new.Tamrini"
+            android:name=".webBroswers.main_web"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.JetPackShop">
