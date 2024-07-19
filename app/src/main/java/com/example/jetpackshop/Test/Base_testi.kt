@@ -1,6 +1,15 @@
 package com.example.jetpackshop.Test
 
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
 object Base_testi {
 
-    const val base_url = "http://192.168.119.101:2020/"
+    val retrofit = Retrofit.Builder()
+        .baseUrl(Utils_testi.baseUrl)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val api = retrofit.create(Api_Testi::class.java)
+
 }

@@ -31,14 +31,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jetpackshop.R
 import com.example.jetpackshop.Tamrini.data.api.api_inter
 import com.example.jetpackshop.Test.Api_Testi
-import com.example.jetpackshop.Test.Model_Testi
+import com.example.jetpackshop.Test.UserModel
+import com.example.jetpackshop.Test.UserViewModel
+
 import com.example.jetpackshop.Test.Utils_testi
-import com.example.jetpackshop.shop.MyForm
-import com.example.jetpackshop.shop.sendRequest
+
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -46,28 +49,27 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 class Form : androidx.activity.ComponentActivity() {
-    @SuppressLint("NewApi")
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            JetPackShopTheme {
-                form()
-            }
+            Screen_Form()
         }
     }
 }
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
-fun form(
+fun Screen_Form(
     modifier: Modifier = Modifier
         .fillMaxSize()
         .padding(15.dp),
 ) {
 
-    var input_name by remember { mutableStateOf("") }
-    var input_number1 by remember { mutableStateOf("") }
-    var input_number2 by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    val userViewModel: UserViewModel = viewModel()
 
     Box(
         modifier = Modifier
@@ -95,29 +97,24 @@ fun form(
             ) {
 
                 OutlinedTextField(
-                    value = input_name,
-                    onValueChange = { input_name = it },
-                    label = { Text("نام") }
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Enter a name ") }
                 )
                 OutlinedTextField(
-                    value = input_number1,
-                    onValueChange = { input_number1 = it },
-                    label = { Text("یک عدد وارد کنید ") }
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Enter a password ") }
                 )
                 OutlinedTextField(
-                    value = input_number2,
-                    onValueChange = { input_number2 = it },
-                    label = { Text("عدد دوم رو وارد کنید ") }
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text(text = "Enter a phone ") }
                 )
 
                 OutlinedButton(
                     onClick = {
-                        senRequest(
-                            input_name,
-                            input_number1,
-                            input_number2
-                        )
-
+                        userViewModel.sendRequest(username, password, phone)
                     },
 
                     modifier = Modifier
@@ -130,33 +127,3 @@ fun form(
         }
     }
 }
-
-@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-fun senRequest(
-    name: String,
-    number1: String,
-    number2: String,
-) {
-
-
-}
-
-
-//GlobalScope.launch(Dispatchers.IO) {
-//    var response = try {
-//        Utils_testi.api.send_request(
-//            Model_Testi(
-//                name = name,
-//                number1 = number1,
-//                number2 = number2
-//            )
-//        )
-//    } catch (e: IOException) {
-//        return@launch
-//    } catch (e: HttpException) {
-//        return@launch
-//    }
-//    if (response.isSuccessful && response.body() != null) {
-//        Log.i("Amin_class_testi", "Request successful: ${response.message()}")
-//    }
-//}

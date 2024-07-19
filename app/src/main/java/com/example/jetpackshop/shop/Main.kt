@@ -2,9 +2,11 @@ package com.example.jetpackshop.shop
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,8 +35,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.jetpackshop.R
+import com.example.jetpackshop.Test.UserViewModel
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
@@ -45,25 +49,30 @@ import retrofit2.HttpException
 import java.io.IOException
 
 class Main : androidx.activity.ComponentActivity() {
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-                MyForm(LocalContext.current)
+                Screen_Form()
             }
         }
     }
 }
 
-@Composable
-fun MyForm(context: Context) {
-    var name by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var productName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+@Composable
+fun Screen_Form(
+    modifier: Modifier = Modifier
+        .fillMaxSize()
+        .padding(15.dp),
+) {
+
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    val userViewModel: UserViewModel = viewModel()
 
     Box(
         modifier = Modifier
@@ -91,48 +100,24 @@ fun MyForm(context: Context) {
             ) {
 
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("نام") }
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Enter a name ") }
                 )
                 OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("نام خانوادگی") }
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Enter a password ") }
                 )
                 OutlinedTextField(
-                    value = productName,
-                    onValueChange = { productName = it },
-                    label = { Text("نام کالا") }
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("توضیحات") }
-                )
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = { date = it },
-                    label = { Text("تاریخ") }
-                )
-                OutlinedTextField(
-                    value = price,
-                    onValueChange = { price = it },
-                    label = { Text("قیمت") }
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text(text = "Enter a phone ") }
                 )
 
                 OutlinedButton(
                     onClick = {
-                        sendRequest(
-                            name,
-                            lastName,
-                            productName,
-                            description,
-                            date,
-                            price,
-                            context
-                        )
-
+                        userViewModel.sendRequest(username, password, phone)
                     },
 
                     modifier = Modifier
@@ -141,81 +126,172 @@ fun MyForm(context: Context) {
                 ) {
                     Text("ثبت کردن")
                 }
-
-                OutlinedButton(onClick = {
-                    val intent = Intent(context, Get_Data::class.java)
-                    // اجرای Intent برای انتقال به صفحه دیگر
-                    context.startActivity(intent)
-                }) {
-                    Text(text = "نمایش کاربران", color = Color.Black)
-                }
-
             }
         }
     }
 }
 
-
-fun sendRequest(
-    name: String,
-    lastName: String,
-    productName: String,
-    description: String,
-    date: String,
-    price: String,
-    context: Context
-) {
-    GlobalScope.launch(Dispatchers.IO) {
-        val response = try {
-            retrofit_instance.api.send_data(
-                Users_ModelItem(
-                    date = date,
-                    description = description,
-                    last_name = lastName,
-                    name = name,
-                    price = price,
-                    product_name = productName,
-                )
-            )
-        } catch (e: IOException) {
-            Log.e("Amin", "IOException occurred: ${e.message}")
-            return@launch
-        } catch (e: HttpException) {
-            Log.e("Amin", "HttpException occurred: ${e.message}")
-            return@launch
-        }
-
-        if (response.isSuccessful && response.body() != null) {
-            Log.i("Amin", "Request successful: ${response.message()}")
-            val intent = Intent(context, Get_Data::class.java)
-            // اجرای Intent برای انتقال به صفحه دیگر
-            context.startActivity(intent)
-            return@launch
-        } else {
-            Log.e("Amin", "Request failed: ${response.message()}")
-            return@launch
-        }
-    }
-}
-
-//private fun sendRequest() {
-//    GlobalScope.launch(Dispatchers.IO) {
-//        val response = try {
-//            retrofit_instance.api.send_data()
-//        } catch (e: IOException) {
-//            return@launch
-//        } catch (e: HttpException) {
-//            return@launch
-//        }
-//        if (response.isSuccessful && response.body() != null){
+//@Composable
+//fun MyForm(context: Context) {
+//    var name by remember { mutableStateOf("") }
+//    var lastName by remember { mutableStateOf("") }
+//    var productName by remember { mutableStateOf("") }
+//    var description by remember { mutableStateOf("") }
+//    var date by remember { mutableStateOf("") }
+//    var price by remember { mutableStateOf("") }
 //
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .fillMaxHeight()
+//            .background(
+//                color = colorResource(id = R.color.white),
+//                shape = RoundedCornerShape(10.dp),
+//            ),
+//        Alignment.Center,
+//
+//        ) {
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .wrapContentHeight()
+//                .clip(CutCornerShape(20.dp))
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(15.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//
+//                OutlinedTextField(
+//                    value = name,
+//                    onValueChange = { name = it },
+//                    label = { Text("نام") }
+//                )
+//                OutlinedTextField(
+//                    value = lastName,
+//                    onValueChange = { lastName = it },
+//                    label = { Text("نام خانوادگی") }
+//                )
+//                OutlinedTextField(
+//                    value = productName,
+//                    onValueChange = { productName = it },
+//                    label = { Text("نام کالا") }
+//                )
+//                OutlinedTextField(
+//                    value = description,
+//                    onValueChange = { description = it },
+//                    label = { Text("توضیحات") }
+//                )
+//                OutlinedTextField(
+//                    value = date,
+//                    onValueChange = { date = it },
+//                    label = { Text("تاریخ") }
+//                )
+//                OutlinedTextField(
+//                    value = price,
+//                    onValueChange = { price = it },
+//                    label = { Text("قیمت") }
+//                )
+//
+//                OutlinedButton(
+//                    onClick = {
+//                        sendRequest(
+//                            name,
+//                            lastName,
+//                            productName,
+//                            description,
+//                            date,
+//                            price,
+//                            context
+//                        )
+//
+//                    },
+//
+//                    modifier = Modifier
+//                        .padding(vertical = 16.dp)
+//                        .align(Alignment.CenterHorizontally)
+//                ) {
+//                    Text("ثبت کردن")
+//                }
+//
+//                OutlinedButton(onClick = {
+//                    val intent = Intent(context, Get_Data::class.java)
+//                    // اجرای Intent برای انتقال به صفحه دیگر
+//                    context.startActivity(intent)
+//                }) {
+//                    Text(text = "نمایش کاربران", color = Color.Black)
+//                }
+//
+//            }
 //        }
 //    }
 //}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ui() {
-    MyForm(LocalContext.current)
-}
+//
+//
+//fun sendRequest(
+//    name: String,
+//    lastName: String,
+//    productName: String,
+//    description: String,
+//    date: String,
+//    price: String,
+//    context: Context
+//) {
+//    GlobalScope.launch(Dispatchers.IO) {
+//        val response = try {
+//            retrofit_instance.api.send_data(
+//                Users_ModelItem(
+//                    date = date,
+//                    description = description,
+//                    last_name = lastName,
+//                    name = name,
+//                    price = price,
+//                    product_name = productName,
+//                )
+//            )
+//        } catch (e: IOException) {
+//            Log.e("Amin", "IOException occurred: ${e.message}")
+//            return@launch
+//        } catch (e: HttpException) {
+//            Log.e("Amin", "HttpException occurred: ${e.message}")
+//            return@launch
+//        }
+//
+//        if (response.isSuccessful && response.body() != null) {
+//            Log.i("Amin", "Request successful: ${response.message()}")
+//            val intent = Intent(context, Get_Data::class.java)
+//            // اجرای Intent برای انتقال به صفحه دیگر
+//            context.startActivity(intent)
+//            return@launch
+//        } else {
+//            Log.e("Amin", "Request failed: ${response.message()}")
+//            return@launch
+//        }
+//    }
+//}
+//
+////private fun sendRequest() {
+////    GlobalScope.launch(Dispatchers.IO) {
+////        val response = try {
+////            retrofit_instance.api.send_data()
+////        } catch (e: IOException) {
+////            return@launch
+////        } catch (e: HttpException) {
+////            return@launch
+////        }
+////        if (response.isSuccessful && response.body() != null){
+////
+////        }
+////    }
+////}
+//
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun ui() {
+//    MyForm(LocalContext.current)
+//}
