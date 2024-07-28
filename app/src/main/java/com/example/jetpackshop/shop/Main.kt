@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.jetpackshop.R
-import com.example.jetpackshop.Test.UserViewModel
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.shop.data.utils.retrofit_instance
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
@@ -72,7 +71,7 @@ fun Screen_Form(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    val userViewModel: UserViewModel = viewModel()
+
 
     Box(
         modifier = Modifier
@@ -117,7 +116,7 @@ fun Screen_Form(
 
                 OutlinedButton(
                     onClick = {
-                        userViewModel.sendRequest(username, password, phone)
+//                        userViewModel.sendRequest(username, password, phone)
                     },
 
                     modifier = Modifier
