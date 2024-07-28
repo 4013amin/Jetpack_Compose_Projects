@@ -24,7 +24,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackshop.R
-import com.example.jetpackshop.shop.MyForm
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 
 class Images : androidx.activity.ComponentActivity() {

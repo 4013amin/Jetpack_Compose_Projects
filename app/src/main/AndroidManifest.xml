@@ -16,12 +16,9 @@
         android:theme="@style/Theme.JetPackShop"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
         <activity
-            android:name=".java.MainActivity"
-            android:exported="false" />
-        <activity android:name=".shop.Get_Data"></activity>
-        <activity
-            android:name=".webBroswers.main_web"
+            android:name=".Test.ui.Register"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.JetPackShop">
