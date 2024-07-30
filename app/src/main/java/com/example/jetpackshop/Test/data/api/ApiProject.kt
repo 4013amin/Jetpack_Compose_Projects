@@ -17,5 +17,14 @@ interface ApiProject {
         @Part("password") password: String,
         @Part("phone") phone: String
     ): Response<UsersModelsNew>
+
+
+    @Multipart
+    @POST("/app/login/")
+    suspend fun sendLogin(
+        @Part("username") username: String,
+        @Part("password") password: String
+    ): Response<UsersModelsNew>
+
 }
 

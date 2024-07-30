@@ -6,8 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.core.IOException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.jetpackshop.Test.data.api.ApiProject
 import com.example.jetpackshop.Test.data.model.UsersModelsNew
 import com.example.jetpackshop.Test.data.utils.Utils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
@@ -16,6 +18,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
 
 
     var registerText = mutableStateOf("")
+    var loginMassage = mutableStateOf("")
     val users = mutableStateOf<List<UsersModelsNew>>(emptyList())
 
     //register
@@ -42,6 +45,30 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
                 registerText.value = "Registration Failed"
             }
 
+        }
+    }
+
+    fun sendLogin(username: String, password: String) {
+
+
+        viewModelScope.launch(Dispatchers.IO) {
+            var response = try {
+                Utils.api.sendLogin(username, password)
+            } catch (e: IOException) {
+                Log.e("IoExceptions", "this is error is IoExceptions", e)
+                loginMassage.value = "this is error for IoExceptions"
+                return@launch
+            } catch (e: HttpException) {
+                Log.e("HttpIoExceptions", "this is a error for HttpExceptions", e)
+                loginMassage.value = "this is error for HttpExceptions"
+                return@launch
+            }
+            if (response.isSuccessful && response.body() != null) {
+                users.value = arrayListOf(response.body()!!)
+                loginMassage.value = "login is ok"
+            } else {
+                loginMassage.value = "login is not Ok"
+            }
         }
     }
 }
