@@ -2,6 +2,7 @@
 
 package com.example.newProject.Ui.getData
 
+import SharedPrefsManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -20,10 +21,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,7 +52,9 @@ class GETALLDATA : androidx.activity.ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
 
-            ScreenData()
+            val prefs = SharedPrefsManager(this)
+            RegistrationScreen(prefs = prefs)
+//            ScreenData()
         }
     }
 }
@@ -111,3 +119,28 @@ fun DataItem(title: String, body: String, id: Int) {
         }
     }
 }
+
+
+@Composable
+fun RegistrationScreen(prefs: SharedPrefsManager) {
+    var userName by remember { mutableStateOf(prefs.username.orEmpty()) }
+    var userEmail by remember { mutableStateOf(prefs.Email.orEmpty()) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        OutlinedTextField(
+            value = userName,
+            onValueChange = { userName = it }
+        )
+        OutlinedTextField(
+            value = userEmail,
+            onValueChange = { userEmail = it }
+        )
+        Button(onClick = {
+            prefs.username = userName
+            prefs.Email = userEmail
+        }) {
+            Text("Save")
+        }
+    }
+}
+
