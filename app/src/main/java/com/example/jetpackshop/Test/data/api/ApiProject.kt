@@ -20,14 +20,14 @@ interface ApiProject {
 
 
     @Multipart
-    @POST("/app/login/")
+    @POST("/app/login")
     suspend fun sendLogin(
         @Part("username") username: String,
         @Part("password") password: String
     ): Response<UsersModelsNew>
 
     @Multipart
-    @POST("/app/logout/")
+    @POST("/app/logout")
     suspend fun sendLogout(
         @Part("username") username: String,
         @Part("password") password: String,

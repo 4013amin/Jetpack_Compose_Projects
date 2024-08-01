@@ -50,8 +50,6 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun sendLogin(username: String, password: String) {
-
-
         viewModelScope.launch(Dispatchers.IO) {
             var response = try {
                 Utils.api.sendLogin(username, password)
@@ -90,7 +88,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
             if (response.isSuccessful && response.body() != null) {
                 users.value = arrayListOf(response.body()!!)
                 logout.value = "logout is ok"
-            }else{
+            } else {
                 logout.value = "logout is not ok"
             }
         }
