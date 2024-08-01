@@ -19,6 +19,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
 
     var registerText = mutableStateOf("")
     var loginMassage = mutableStateOf("")
+    var logout = mutableStateOf("")
     val users = mutableStateOf<List<UsersModelsNew>>(emptyList())
 
     //register
@@ -68,6 +69,29 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
                 loginMassage.value = "login is ok"
             } else {
                 loginMassage.value = "login is not Ok"
+            }
+        }
+    }
+
+    fun sendLogout(username: String, password: String) {
+        viewModelScope.launch {
+            var response = try {
+                Utils.api.sendLogout(username, password)
+            } catch (e: IOException) {
+                Log.e("IoException", "${e.message}")
+                logout.value = "${e.message}"
+                return@launch
+            } catch (e: HttpException) {
+                Log.e("HttpException", "${e.message}")
+                logout.value = "${e.message}"
+                return@launch
+            }
+
+            if (response.isSuccessful && response.body() != null) {
+                users.value = arrayListOf(response.body()!!)
+                logout.value = "logout is ok"
+            }else{
+                logout.value = "logout is not ok"
             }
         }
     }

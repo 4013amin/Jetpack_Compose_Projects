@@ -249,6 +249,24 @@ fun LoginScreen(navController: NavController) {
                 Text("Register")
             }
 
+            //logout
+            Button(
+                onClick = { viewModel.sendLogout(username, password) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("logout")
+            }
+
+            Text(
+                text = viewModel.logout.value,
+                color = if (viewModel.logout.value.contains("login is ok")) Color.Green else Color.Red,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                style = androidx.compose.ui.text.TextStyle(fontSize = 16.sp)
+            )
+
+
             //Toast
             Text(
                 text = viewModel.loginMassage.value,

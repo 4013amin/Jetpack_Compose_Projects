@@ -26,5 +26,12 @@ interface ApiProject {
         @Part("password") password: String
     ): Response<UsersModelsNew>
 
+    @Multipart
+    @POST("/app/logout/")
+    suspend fun sendLogout(
+        @Part("username") username: String,
+        @Part("password") password: String,
+    ): Response<UsersModelsNew>
+
 }
 
