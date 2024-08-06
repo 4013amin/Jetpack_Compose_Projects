@@ -6,12 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.core.IOException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.jetpackshop.Tamrini_new.data.utils_new.utils_urls_new
 import com.example.jetpackshop.Test.data.api.ApiProject
 import com.example.jetpackshop.Test.data.model.UsersModelsNew
 import com.example.jetpackshop.Test.data.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.HttpException
+import java.io.File
 
 
 class ViewModel(application: Application) : AndroidViewModel(application) {
@@ -23,29 +29,30 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
     val users = mutableStateOf<List<UsersModelsNew>>(emptyList())
 
     //register
-    fun sendRegister(username: String, password: String, phone: String) {
-
+    fun sendRegister(username: String, password: String, phone: String, imageUri: String) {
         viewModelScope.launch {
-            var response = try {
+            try {
+                val file = File(imageUri)
+                val requestFile = RequestBody.create("image/*".toMediaTypeOrNull(), file)
+                val body = MultipartBody.Part.createFormData("image", file.name, requestFile)
+                val usernamePart = RequestBody.create(MultipartBody.FORM, username)
+                val passwordPart = RequestBody.create(MultipartBody.FORM, password)
+                val phonePart = RequestBody.create(MultipartBody.FORM, phone)
 
-                Utils.api.sendRegister(username, password, phone)
-            } catch (e: IOException) {
-                Log.e("IoException", "IoException", e)
-                registerText.value == "error is a IOException"
-                return@launch
-            } catch (e: HttpException) {
-                Log.e("HttpError", "This is error for http", e)
-                registerText.value = "error is a Http response"
-                return@launch
+                val response = Utils.api.sendRegister(
+                    body,
+                    usernamePart,
+                    passwordPart,
+                    phonePart
+                )
+                if (response.isSuccessful) {
+                    registerText.value = "Registration Successful"
+                } else {
+                    registerText.value = "Registration Failed"
+                }
+            } catch (e: Exception) {
+                registerText.value = "Error: ${e.message}"
             }
-
-            if (response.isSuccessful && response.body() != null) {
-                users.value = listOf(response.body()!!)
-                registerText.value = "Registration Successful"
-            } else {
-                registerText.value = "Registration Failed"
-            }
-
         }
     }
 

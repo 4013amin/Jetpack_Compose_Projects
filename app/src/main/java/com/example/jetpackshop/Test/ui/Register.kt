@@ -73,8 +73,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
     var phone by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf("") }
 
-
-    //GetImageForUsers
     val imagePickerLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let {
@@ -82,7 +80,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
                 onImagePicked(imageUri)
             }
         }
-
 
     Box(
         modifier = Modifier
@@ -97,7 +94,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
                 .background(Color.Cyan),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Username Field
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -107,7 +103,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Password Field
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -118,7 +113,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Phone Field
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
@@ -129,7 +123,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Image Picker Button
             Button(
                 onClick = { imagePickerLauncher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth()
@@ -138,7 +131,7 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            // Display selected image
+
             if (imageUri.isNotEmpty()) {
                 Image(
                     painter = rememberImagePainter(
@@ -157,9 +150,8 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Register Button
             Button(
-                onClick = { viewModel.sendRegister(username, password, phone) },
+                onClick = { viewModel.sendRegister(username, password, phone, imageUri) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Register")
@@ -167,7 +159,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Login Button
             Button(
                 onClick = { navController.navigate("login") },
                 modifier = Modifier.fillMaxWidth()
@@ -175,7 +166,6 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
                 Text("Login")
             }
 
-            //Toast
             Text(
                 text = viewModel.registerText.value,
                 color = if (viewModel.registerText.value.contains("Registration Successful")) Color.Green else Color.Red,
@@ -187,6 +177,7 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
         }
     }
 }
+
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -294,3 +285,4 @@ fun Navigation() {
         }
     }
 }
+

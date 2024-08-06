@@ -11,12 +11,13 @@ import retrofit2.http.Part
 
 interface ApiProject {
     @Multipart
-    @POST("/app/senRegister")
+    @POST("upload")
     suspend fun sendRegister(
-        @Part("username") username: String,
-        @Part("password") password: String,
-        @Part("phone") phone: String
-    ): Response<UsersModelsNew>
+        @Part image: MultipartBody.Part,
+        @Part("username") username: RequestBody,
+        @Part("password") password: RequestBody,
+        @Part("phone") phone: RequestBody
+    ): retrofit2.Response<UsersModelsNew>
 
 
     @Multipart
