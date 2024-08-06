@@ -1,5 +1,6 @@
 package com.example.jetpackshop.Test.ui
 
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -49,6 +50,7 @@ import com.example.jetpackshop.shop.Screen_Form
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
+import com.example.jetpackshop.Test.data.Shared.SharedManager
 import com.example.jetpackshop.Test.data.viewModel.ViewModel
 
 
@@ -59,7 +61,7 @@ class Register : androidx.activity.ComponentActivity() {
         setContent {
             JetPackShopTheme {
                 val navController = rememberNavController()
-                Navigation()
+                Navigation(this)
             }
         }
     }
@@ -180,12 +182,11 @@ fun RegisterScreen(onImagePicked: (String) -> Unit, navController: NavController
 
 
 @Composable
-fun LoginScreen(navController: NavController) {
-
+fun LoginScreen(navController: NavController, context: Context) {
+    var prefs = SharedManager(context)
     val viewModel: ViewModel = viewModel()
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
+    var username by remember { mutableStateOf(prefs.username.orEmpty()) }
+    var password by remember { mutableStateOf(prefs.password.orEmpty()) }
 
     Box(
         modifier = Modifier
@@ -222,9 +223,15 @@ fun LoginScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
 
-            // Register Button
+            // submit Button
             Button(
-                onClick = { viewModel.sendLogin(username, password) },
+                onClick = {
+
+                    prefs.username = username
+                    prefs.password = password
+                    viewModel.sendLogin(username, password)
+
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Login")
@@ -232,7 +239,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Login Button
+            // register Button
             Button(
                 onClick = { navController.navigate("register") },
                 modifier = Modifier.fillMaxWidth()
@@ -273,7 +280,7 @@ fun LoginScreen(navController: NavController) {
 
 //navigation
 @Composable
-fun Navigation() {
+fun Navigation(context: Context) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "register") {
         composable("register") {
@@ -281,7 +288,7 @@ fun Navigation() {
         }
 
         composable("login") {
-            LoginScreen(navController)
+            LoginScreen(navController, context)
         }
     }
 }

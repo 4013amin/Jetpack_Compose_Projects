@@ -35,4 +35,3 @@ interface ApiProject {
     ): Response<UsersModelsNew>
 
 }
-
