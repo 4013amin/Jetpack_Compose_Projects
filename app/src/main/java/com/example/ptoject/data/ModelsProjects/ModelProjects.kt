@@ -1,6 +1,6 @@
-package com.example.newProject.data.Models
+package com.example.ptoject.data.ModelsProjects
 
-data class GetDataItem(
+data class ModelProjects(
     val body: String,
     val id: Int,
     val title: String,
