@@ -14,12 +14,15 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -27,6 +30,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.jetpackshop.R
 import com.example.jetpackshop.randomfact.send_request
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import com.example.ptoject.data.ViewModles.ViewModelsProject
@@ -40,8 +49,9 @@ class SendData : androidx.activity.ComponentActivity() {
 
         setContent {
             JetPackShopTheme {
-                val viewModel: ViewModelsProject = viewModel()
-                GetData(viewModel, this)
+//                val viewModel: ViewModelsProject = viewModel()
+//                GetData(viewModel, this)
+                AnimationScreen()
             }
         }
     }
@@ -97,5 +107,28 @@ fun GetData(viewModel: ViewModelsProject, context: Context) {
                 Text("User ID: ${it.userId}")
             }
         }
+    }
+}
+
+
+@Composable
+fun AnimationScreen() {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(15.dp)
+            .background(color = Color.White),
+        contentAlignment = Alignment.Center
+    ) {
+        LottieAnimation(
+            composition = composition,
+            progress = { progress }
+        )
     }
 }
