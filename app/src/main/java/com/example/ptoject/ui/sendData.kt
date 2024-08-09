@@ -14,12 +14,14 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -27,6 +29,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jetpackshop.Tamrini_new.Tamrini
 import com.example.jetpackshop.randomfact.send_request
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import com.example.ptoject.data.ViewModles.ViewModelsProject
@@ -40,8 +43,9 @@ class SendData : androidx.activity.ComponentActivity() {
 
         setContent {
             JetPackShopTheme {
-                val viewModel: ViewModelsProject = viewModel()
-                GetData(viewModel, this)
+//                val viewModel: ViewModelsProject = viewModel()
+//                GetData(viewModel, this)
+                tamrini()
             }
         }
     }
@@ -98,4 +102,31 @@ fun GetData(viewModel: ViewModelsProject, context: Context) {
             }
         }
     }
+}
+
+@Composable
+fun tamrini() {
+
+    var number by remember {
+        mutableStateOf(0)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = Color.White)
+            .padding(15.dp)
+    ) {
+        Button(onClick = { number++ }) {
+            Text(text = "add number = ${number}")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = { number-- }) {
+            Text(text = "cam number = ${number}")
+        }
+    }
+
+
 }
