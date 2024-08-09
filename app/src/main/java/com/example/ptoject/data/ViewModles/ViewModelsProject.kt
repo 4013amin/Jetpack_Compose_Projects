@@ -23,7 +23,7 @@ class ViewModelsProject(application: Application) : AndroidViewModel(application
     fun getData(id: Int) {
         viewModelScope.launch {
             val response = try {
-                UtilsRetrofit.api.getData(2)
+                UtilsRetrofit.api.getData(id)
             } catch (e: IOException) {
                 registerText.value = "error is in Io"
                 return@launch

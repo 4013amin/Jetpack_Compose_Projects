@@ -1,9 +1,16 @@
 package com.example.ptoject.ui
 
+import android.Manifest
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
@@ -15,10 +22,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jetpackshop.randomfact.send_request
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import com.example.ptoject.data.ViewModles.ViewModelsProject
+import generatePdf
+import openPdf
+import java.io.File
 
 class SendData : androidx.activity.ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,14 +41,15 @@ class SendData : androidx.activity.ComponentActivity() {
         setContent {
             JetPackShopTheme {
                 val viewModel: ViewModelsProject = viewModel()
-                GetData(viewModel)
+                GetData(viewModel, this)
             }
         }
     }
 }
 
+
 @Composable
-fun GetData(viewModel: ViewModelsProject) {
+fun GetData(viewModel: ViewModelsProject, context: Context) {
     var id by remember { mutableStateOf("") }
     val modelProject by viewModel.modelProject
     val registerText by viewModel.registerText
@@ -54,13 +69,23 @@ fun GetData(viewModel: ViewModelsProject) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
-            // Ensure ID is a valid integer before calling getData
             id.toIntOrNull()?.let { viewModel.getData(it) }
         }) {
             Text("Get Data")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            modelProject?.let {
+                val file = generatePdf(context, it, "report.pdf")
+                Toast.makeText(context, "PDF saved to ${file.absolutePath}", Toast.LENGTH_LONG)
+                    .show()
+                openPdf(context, file)
+            }
+        }) {
+            Text("Download PDF")
+        }
 
         Text(text = registerText)
 
