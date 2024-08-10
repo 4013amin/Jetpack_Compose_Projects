@@ -14,7 +14,8 @@ import java.io.File
 import java.io.FileOutputStream
 
 fun generatePdf(context: Context, data: ModelProjects, fileName: String): File {
-    val downloadsDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    val downloadsDirectory =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
     val file = File(downloadsDirectory, fileName)
     FileOutputStream(file).use { outputStream ->
         val pdfWriter = PdfWriter(outputStream)
