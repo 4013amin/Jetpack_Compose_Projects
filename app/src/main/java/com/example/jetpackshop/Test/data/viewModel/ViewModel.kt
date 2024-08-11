@@ -3,7 +3,6 @@ package com.example.jetpackshop.Test.data.viewModel
 import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.datastore.core.IOException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jetpackshop.Tamrini_new.data.utils_new.utils_urls_new
@@ -18,6 +17,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
 import java.io.File
+import java.io.IOException
 
 
 class ViewModel(application: Application) : AndroidViewModel(application) {

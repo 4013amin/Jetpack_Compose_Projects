@@ -34,9 +34,16 @@ fun generatePdf(context: Context, data: ModelProjects, fileName: String): File {
 }
 
 fun openPdf(context: Context, file: File) {
-    val intent = Intent(Intent.ACTION_VIEW)
-    val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-    intent.setDataAndType(uri, "application/pdf")
-    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    val uri = FileProvider.getUriForFile(
+        context,
+        "com.example.jetpackshop.provider",
+        file
+    )
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/pdf")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
     context.startActivity(intent)
 }
