@@ -152,7 +152,8 @@ fun GetData(viewModel: ViewModelsProject, context: Context) {
             if (selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
                 scheduleNotification(context, selectedDate, selectedTime)
             } else {
-                Toast.makeText(context, "Please select both date and time.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please select both date and time.", Toast.LENGTH_SHORT)
+                    .show()
             }
         }) {
             Text("Schedule Notification")
@@ -171,7 +172,6 @@ fun GetData(viewModel: ViewModelsProject, context: Context) {
     }
 }
 
-@SuppressLint("ServiceCast")
 @RequiresApi(Build.VERSION_CODES.O)
 fun scheduleNotification(context: Context, date: String, time: String) {
     val calendar = Calendar.getInstance().apply {
@@ -192,10 +192,17 @@ fun scheduleNotification(context: Context, date: String, time: String) {
         putExtra("notification_title", "Scheduled Notification")
         putExtra("notification_message", "This is a scheduled notification.")
     }
-    val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        0,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
 
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
 }
+
 
 
