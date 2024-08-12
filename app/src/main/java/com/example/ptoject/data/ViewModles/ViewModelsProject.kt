@@ -2,7 +2,6 @@ package com.example.ptoject.data.ViewModles
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
-import androidx.datastore.core.IOException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jetpackshop.Test.data.utils.Utils
@@ -14,6 +13,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
 import java.io.File
+import java.io.IOException
 
 class ViewModelsProject(application: Application) : AndroidViewModel(application) {
 

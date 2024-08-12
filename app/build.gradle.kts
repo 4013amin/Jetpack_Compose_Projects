@@ -66,7 +66,6 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.0-beta01")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.35.0-alpha")
     implementation("androidx.compose.material3:material3:1.3.0-alpha03")
-    implementation("androidx.datastore:datastore-core-android:1.1.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.activity:activity:1.9.0")
