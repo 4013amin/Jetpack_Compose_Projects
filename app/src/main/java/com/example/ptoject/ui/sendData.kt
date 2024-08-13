@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -31,8 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -134,91 +140,128 @@ fun AnimationScreen() {
     }
 }
 
-data class navigationsData(
+data class NavigationItem(
     val title: String,
-    val selectedItem: ImageVector,
-    val unselectedItem: ImageVector,
-    val hasBag: Boolean,
-    val BageNumber: Int
+    val icon: ImageVector,
+    val route: String
 )
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ShowScaffold(modifier: Modifier = Modifier) {
-    var expanded by remember { mutableStateOf(false) } // To manage the state of dropdown menu
+    val navController = rememberNavController()
+    var selectedItem by remember { mutableStateOf("home") }
 
-    val items = arrayOf(
-        navigationsData(
-            title = "Home",
-            selectedItem = Icons.Filled.Home,
-            unselectedItem = Icons.Outlined.Home,
-            hasBag = false,
-            0
-        ),
-        navigationsData(
-            title = "Search",
-            selectedItem = Icons.Filled.Search,
-            unselectedItem = Icons.Outlined.Search,
-            hasBag = false,
-            0
-        ),
-        navigationsData(
-            title = "Home",
-            selectedItem = Icons.Filled.Face,
-            unselectedItem = Icons.Outlined.Face,
-            hasBag = false,
-            6
-        )
+    val items = listOf(
+        NavigationItem("Home", Icons.Filled.Home, "home"),
+        NavigationItem("Search", Icons.Filled.Search, "search"),
+        NavigationItem("Profile", Icons.Filled.Face, "profile")
     )
-    val navSatate by remember {
-        mutableStateOf(0)
-    }
 
     Scaffold(
-        modifier
-            .fillMaxSize()
-            .background(color = Color.White),
         topBar = {
             TopAppBar(
                 title = { Text(text = "Top App Bar") },
                 actions = {
-                    IconButton(onClick = { expanded = !expanded }) {
+                    IconButton(onClick = { /* Handle more options */ }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "More options")
                     }
                 }
             )
         },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { /* Handle FAB click */ },
+                containerColor = Color.White
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Add")
+            }
+        },
         bottomBar = {
-            BottomAppBar {
-                NavigationBar {
-                    items.forEachIndexed { index, navigationsData ->
-                        NavigationBarItem(
-                            selected = navSatate == index,
-                            onClick = { navSatate == index },
-                            icon = {
-                                Icon(
-                                    imageVector = if (navSatate == index) navigationsData.selectedItem
-                                    else navigationsData.unselectedItem,
-                                    contentDescription = navigationsData.title
-                                )
-                            })
-                    }
+            NavigationBar {
+                items.forEach { item ->
+                    NavigationBarItem(
+                        icon = { Icon(item.icon, contentDescription = item.title) },
+                        label = { Text(item.title) },
+                        selected = selectedItem == item.route,
+                        onClick = {
+                            selectedItem = item.route
+                            navController.navigate(item.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
                 }
-
             }
         }
-
-    ) {
-        // Your screen content goes here
-
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            Modifier.padding(innerPadding)
+        ) {
+            composable("home") { ScreenHome() }
+            composable("search") { ScreenSearch() }
+            composable("profile") { ScreenFace() }
+        }
     }
 }
 
 
-@Preview(showBackground = true)
 @Composable
-private fun showScafffoledad() {
-    ShowScaffold()
+fun ScreenHome() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(15.dp)
+            .background(color = Color.White)
+    ) {
+
+        Text(
+            text = "This is Home Screen ",
+            fontSize = 25.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
+fun ScreenSearch() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(15.dp)
+            .background(color = Color.White)
+    ) {
+
+        Text(
+            text = "This is Search Screen ",
+            fontSize = 25.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.Black
+        )
+
+    }
+}
+
+@Composable
+fun ScreenFace() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(15.dp)
+            .background(color = Color.White)
+    ) {
+
+        Text(
+            text = "This is Face Screen ",
+            fontSize = 25.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.Black
+        )
+
+    }
 }
