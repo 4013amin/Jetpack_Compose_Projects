@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -70,31 +71,17 @@ class MainUiWebsocket : ComponentActivity() {
 
 @Composable
 fun WebSocketChatUI() {
+    var username by remember { mutableStateOf("") }
+    var roomName by remember { mutableStateOf("") }
+    var recipient by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
-    var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
+    val messages = remember { mutableStateListOf<ChatMessage>() }
     val scope = rememberCoroutineScope()
 
-    // Create an instance of WebSocketClient
     val webSocketClient = remember { WebSocketClient(scope) }
+    var isConnected by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
-        // Establish WebSocket connection
-        webSocketClient.connectWebSocket("ws://192.168.249.101:2020/ws/app/lobby/") {
-            val jsonMessage = JSONObject(it)
-            val content = jsonMessage.optString("message", "").trim()
-            val isSentByUser = jsonMessage.optBoolean("isSentByUser", false)
-
-            // Only add messages that are not sent by the user
-            if (content.isNotEmpty() && !isSentByUser) {  // <-- Only add messages from other users
-                messages = messages + ChatMessage(content, isSentByUser)
-            } else {
-                Log.e(
-                    "WebSocketChatUI",
-                    "Received empty content in message or message from self"
-                )  // <-- Logging for debug
-            }
-        }
-
         onDispose {
             webSocketClient.closeWebSocket()
         }
@@ -103,62 +90,132 @@ fun WebSocketChatUI() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEEEEEE))
+            .background(Color(0xFFFAFAFA))
+            .padding(16.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .padding(8.dp),
-            reverseLayout = true
-        ) {
-            items(messages.reversed()) { msg ->
-                MessageBubble(message = msg.content, isSentByUser = msg.isSentByUser)
+        if (!isConnected) {
+            // Username and Room Name Input Fields
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    placeholder = { Text("Enter your username") }
+                )
+                TextField(
+                    value = roomName,
+                    onValueChange = { roomName = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    placeholder = { Text("Enter room name") }
+                )
             }
-        }
-        Divider(color = Color.Gray, thickness = 1.dp)
-        Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .background(Color.White)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextField(
-                value = message,
-                onValueChange = { message = it },
+            Button(
+                onClick = {
+                    if (username.isNotEmpty() && roomName.isNotEmpty()) {
+                        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
+                        webSocketClient.connectWebSocket(url) { text ->
+                            val jsonMessage = JSONObject(text)
+                            val content = jsonMessage.optString("message", "").trim()
+                            val sender = jsonMessage.optString("sender", "").trim()
+
+                            if (content.isNotEmpty()) {
+                                messages.add(ChatMessage(content, sender == username))
+                            } else {
+                                Log.e("WebSocketChatUI", "Received empty content")
+                            }
+                        }
+                        isConnected = true
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
+                Text("Connect")
+            }
+        } else {
+            // Message List
+            LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(8.dp),
-                placeholder = { Text("Type a message...") }
-            )
-            IconButton(
-                onClick = {
-                    if (message.isNotEmpty()) {
-                        val jsonMessage = JSONObject().apply {
-                            put("message", message.trim())  // <-- Sending message
-                            put("isSentByUser", true)
-                        }.toString()
-                        webSocketClient.sendMessage(jsonMessage)
-                        // Add the message to the list of messages sent by the user
-                        // Note: This is to show the message immediately to the user
-                        messages = messages + ChatMessage(message.trim(), true)
-                        message = ""
-                    } else {
-                        Log.e(
-                            "WebSocketChatUI",
-                            "Message field is missing or empty"
-                        )  // <-- Logging for debug
+                    .padding(vertical = 8.dp),
+                reverseLayout = true
+            ) {
+                items(messages.reversed()) { msg ->
+                    MessageBubble(message = msg.content, isSentByUser = msg.isSentByUser)
+                }
+            }
+
+            // Input Fields for Chat
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = recipient,
+                    onValueChange = { recipient = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+                    placeholder = { Text("Recipient username...") }
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = message,
+                        onValueChange = { message = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp)),
+                        placeholder = { Text("Type a message...") }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = {
+                            if (message.isNotEmpty() && recipient.isNotEmpty()) {
+                                val jsonMessage = JSONObject().apply {
+                                    put("action", "send_message")
+                                    put("message", message.trim())
+                                    put("recipient", recipient.trim())
+                                }.toString()
+                                webSocketClient.sendMessage(jsonMessage)
+                                messages.add(ChatMessage(message.trim(), true))
+                                message = ""
+                            } else {
+                                Log.e(
+                                    "WebSocketChatUI",
+                                    "Message or recipient field is missing or empty"
+                                )
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Send Message",
+                            tint = Color(0xFF00796B) // Custom color for the send button
+                        )
                     }
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Send Message"
-                )
             }
         }
     }
 }
+
 
 @Composable
 fun MessageBubble(message: String, isSentByUser: Boolean) {
@@ -173,7 +230,6 @@ fun MessageBubble(message: String, isSentByUser: Boolean) {
             modifier = Modifier
                 .background(if (isSentByUser) Color(0xFFDCF8C6) else Color.White)
                 .padding(8.dp)
-                .clip(RoundedCornerShape(8.dp))
         )
     }
 }
@@ -188,12 +244,11 @@ class WebSocketClient(private val scope: CoroutineScope) {
         val client = OkHttpClient()
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                Log.i("WebSocket", "WebSocket connected")
+            override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                println("WebSocket connected")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                Log.i("WebSocket", "Message received: $text")
                 scope.launch(Dispatchers.Main) {
                     onMessageReceived(text)
                 }
@@ -204,15 +259,19 @@ class WebSocketClient(private val scope: CoroutineScope) {
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                Log.i("WebSocket", "WebSocket closing: $reason")
+                println("WebSocket closing: $reason")
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                Log.i("WebSocket", "WebSocket closed: $reason")
+                println("WebSocket closed: $reason")
             }
 
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e("WebSocket", "WebSocket failure: ${t.message}", t)
+            override fun onFailure(
+                webSocket: WebSocket,
+                t: Throwable,
+                response: okhttp3.Response?
+            ) {
+                println("WebSocket failure: ${t.message}")
             }
         }
 
@@ -220,11 +279,16 @@ class WebSocketClient(private val scope: CoroutineScope) {
     }
 
     fun sendMessage(message: String) {
-        Log.i("WebSocketClient", "Sending message: $message")
         webSocket.send(message)
     }
 
     fun closeWebSocket() {
         webSocket.close(1000, "Goodbye!")
     }
+}
+
+@Preview
+@Composable
+private fun showUiWebSocket() {
+    WebSocketChatUI()
 }
