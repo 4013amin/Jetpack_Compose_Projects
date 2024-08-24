@@ -1,4 +1,7 @@
+package com.example.jetpackshop.Websocket.ui
+
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +38,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONObject
 
 class MainUiWebsocket : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,10 +56,15 @@ class MainUiWebsocket : ComponentActivity() {
 fun WebSocketDemo() {
     var message by remember { mutableStateOf("") }
     var messages by remember { mutableStateOf("") }
+    var sentMessage by remember { mutableStateOf("") }
     val client = OkHttpClient()
-
     val request = Request.Builder().url("ws://192.168.1.110:2020/ws/app/").build()
+
     val listener = object : WebSocketListener() {
+        override fun onOpen(webSocket: WebSocket, response: Response) {
+            Log.i("WebSocketStatus", "WebSocket connected successfully")
+        }
+
         override fun onMessage(webSocket: WebSocket, text: String) {
             GlobalScope.launch(Dispatchers.Main) {
                 messages += "$text\n"
@@ -65,30 +74,54 @@ fun WebSocketDemo() {
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             GlobalScope.launch(Dispatchers.Main) {
                 messages += "Error: ${t.message}\n"
+                Log.e("WebSocketError", "Error: ${t.message}", t)
+            }
+        }
+
+        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            GlobalScope.launch(Dispatchers.Main) {
+                messages += "WebSocket closed: $reason\n"
             }
         }
     }
 
     val webSocket = client.newWebSocket(request, listener)
 
-    Column(Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
         Text(text = messages)
         Spacer(modifier = Modifier.height(16.dp))
-        TextField(value = message, onValueChange = { message = it })
+        TextField(
+            value = message,
+            onValueChange = { message = it }
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
             if (message.isNotEmpty()) {
-                webSocket.send(message)
-                message = ""
+                val jsonMessage = JSONObject().put("message", message).toString()
+                val sendSuccess = webSocket.send(jsonMessage)
+                if (sendSuccess) {
+                    // پیام با موفقیت ارسال شد
+                    GlobalScope.launch(Dispatchers.Main) {
+                        sentMessage = "Message sent successfully: $message"
+                        message = ""
+                    }
+                } else {
+                    // ارسال پیام با خطا مواجه شد
+                    GlobalScope.launch(Dispatchers.Main) {
+                        sentMessage = "Failed to send message: $message"
+                    }
+                }
             }
         }) {
             Text("Send")
         }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun WebSocketDemoPreview() {
-    WebSocketDemo()
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = sentMessage)
+    }
 }

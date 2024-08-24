@@ -35,6 +35,7 @@
             </intent-filter>
         </activity>
 
+
         <!-- Register the NotificationReceiver -->
         <receiver
             android:name="NotificationReceiver"

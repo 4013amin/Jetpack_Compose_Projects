@@ -13,8 +13,6 @@ import com.example.jetpackshop.navigations.nav
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 
 class MainActivity : ComponentActivity() {
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
