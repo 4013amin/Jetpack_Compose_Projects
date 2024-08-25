@@ -54,7 +54,7 @@ fun WebSocketDemo() {
     var messages by remember { mutableStateOf("") }
     val client = OkHttpClient()
 
-    val request = Request.Builder().url("ws://192.168.1.110:2020/ws/app/").build()
+    val request = Request.Builder().url("ws://192.168.128.1:2020/ws/app/").build()
     val listener = object : WebSocketListener() {
         override fun onMessage(webSocket: WebSocket, text: String) {
             GlobalScope.launch(Dispatchers.Main) {
