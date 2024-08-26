@@ -124,7 +124,7 @@ fun WebSocketChatUI() {
             Button(
                 onClick = {
                     if (username.isNotEmpty() && roomName.isNotEmpty()) {
-                        val url = "ws://192.168.254.101:2020/ws/app/$roomName/$username/"
+                        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
                         webSocketClient.connectWebSocket(url) { text ->
                             val jsonMessage = JSONObject(text)
 
