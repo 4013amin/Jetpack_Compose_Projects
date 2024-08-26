@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -42,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
@@ -76,6 +80,7 @@ fun WebSocketChatUI() {
     var recipient by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<ChatMessage>() }
+    val onlineUsers = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
 
     val webSocketClient = remember { WebSocketClient(scope) }
@@ -90,124 +95,132 @@ fun WebSocketChatUI() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
             .padding(16.dp)
     ) {
         if (!isConnected) {
-            // Username and Room Name Input Fields
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
                 TextField(
                     value = username,
                     onValueChange = { username = it },
+                    placeholder = { Text("Enter your username") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
-                    placeholder = { Text("Enter your username") }
+                        .padding(vertical = 4.dp)
                 )
+
                 TextField(
                     value = roomName,
                     onValueChange = { roomName = it },
+                    placeholder = { Text("Enter room name") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
-                    placeholder = { Text("Enter room name") }
+                        .padding(vertical = 4.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = {
                     if (username.isNotEmpty() && roomName.isNotEmpty()) {
-                        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
+                        val url = "ws://192.168.254.101:2020/ws/app/$roomName/$username/"
                         webSocketClient.connectWebSocket(url) { text ->
                             val jsonMessage = JSONObject(text)
-                            val content = jsonMessage.optString("message", "").trim()
-                            val sender = jsonMessage.optString("sender", "").trim()
 
-                            if (content.isNotEmpty()) {
-                                messages.add(ChatMessage(content, sender == username))
+                            if (jsonMessage.has("online_users")) {
+                                val usersArray = jsonMessage.getJSONArray("online_users")
+                                onlineUsers.clear()
+                                for (i in 0 until usersArray.length()) {
+                                    val user = usersArray.getString(i)
+                                    onlineUsers.add(user)
+                                }
                             } else {
-                                Log.e("WebSocketChatUI", "Received empty content")
+                                val content = jsonMessage.optString("message", "").trim()
+                                val sender = jsonMessage.optString("sender", "").trim()
+
+                                if (content.isNotEmpty()) {
+                                    messages.add(ChatMessage(content, sender == username))
+                                }
                             }
                         }
                         isConnected = true
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text("Connect")
             }
         } else {
-            // Message List
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 8.dp),
-                reverseLayout = true
-            ) {
-                items(messages.reversed()) { msg ->
-                    MessageBubble(message = msg.content, isSentByUser = msg.isSentByUser)
-                }
-            }
-
-            // Input Fields for Chat
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TextField(
-                    value = recipient,
-                    onValueChange = { recipient = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
-                    placeholder = { Text("Recipient username...") }
+            if (recipient.isEmpty()) {
+                Text(
+                    text = "Online Users:",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Divider(color = Color.Gray, thickness = 1.dp)
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(onlineUsers) { user ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFE0E0E0))
+                                .padding(8.dp)
+                                .clickable {
+                                    recipient = user
+                                    messages.clear()
+                                }
+                        ) {
+                            Text(
+                                text = user,
+                                style = MaterialTheme.typography.bodyLarge.copy(color = Color.Black)
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Chat with $recipient",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Divider(color = Color.Gray, thickness = 1.dp)
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(messages.reversed()) { msg ->
+                        MessageBubble(message = msg.content, isSentByUser = msg.isSentByUser)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     TextField(
                         value = message,
                         onValueChange = { message = it },
+                        placeholder = { Text("Type a message...") },
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp)),
-                        placeholder = { Text("Type a message...") }
+                            .padding(vertical = 4.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = {
-                            if (message.isNotEmpty() && recipient.isNotEmpty()) {
+                            if (message.isNotEmpty()) {
                                 val jsonMessage = JSONObject().apply {
-                                    put("action", "send_message")
-                                    put("message", message.trim())
-                                    put("recipient", recipient.trim())
+                                    put("message", message)
                                 }.toString()
                                 webSocketClient.sendMessage(jsonMessage)
-                                messages.add(ChatMessage(message.trim(), true))
+                                messages.add(ChatMessage(message, true))
                                 message = ""
-                            } else {
-                                Log.e(
-                                    "WebSocketChatUI",
-                                    "Message or recipient field is missing or empty"
-                                )
                             }
-                        }
+                        },
+                        modifier = Modifier.padding(start = 8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
                             contentDescription = "Send Message",
-                            tint = Color(0xFF00796B) // Custom color for the send button
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -215,7 +228,6 @@ fun WebSocketChatUI() {
         }
     }
 }
-
 
 @Composable
 fun MessageBubble(message: String, isSentByUser: Boolean) {
@@ -228,11 +240,15 @@ fun MessageBubble(message: String, isSentByUser: Boolean) {
         Text(
             text = message,
             modifier = Modifier
-                .background(if (isSentByUser) Color(0xFFDCF8C6) else Color.White)
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (isSentByUser) Color(0xFFDCF8C6) else Color(0xFFFFFFFF))
                 .padding(8.dp)
+                .widthIn(max = 240.dp),
+            color = Color.Black
         )
     }
 }
+
 
 data class ChatMessage(val content: String, val isSentByUser: Boolean)
 
