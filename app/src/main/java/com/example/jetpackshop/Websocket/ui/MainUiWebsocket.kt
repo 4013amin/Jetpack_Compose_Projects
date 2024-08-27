@@ -27,9 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -46,99 +48,9 @@ class MainUiWebsocket : ComponentActivity() {
 
         setContent {
             JetPackShopTheme {
-                MyApp()
             }
         }
     }
 }
 
 
-@Composable
-fun MyApp() {
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "login") {
-        composable("login") {
-            LoginScreen(navController)
-        }
-        composable("chat") {
-            WebSocketDemo()
-        }
-    }
-}
-
-@Composable
-fun LoginScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
-    var roomName by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        TextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(
-            value = roomName,
-            onValueChange = { roomName = it },
-            label = { Text("Room Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = {
-                navController.navigate("chat")
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Join Chat")
-        }
-    }
-}
-
-@Composable
-fun WebSocketDemo() {
-    var message by remember { mutableStateOf("") }
-    var messages by remember { mutableStateOf("") }
-    val client = OkHttpClient()
-
-    val request = Request.Builder().url("ws://192.168.128.1:2020/ws/app/").build()
-    val listener = object : WebSocketListener() {
-        override fun onMessage(webSocket: WebSocket, text: String) {
-            messages += "$text\n"
-        }
-
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            messages += "Error: ${t.message}\n"
-        }
-    }
-
-    val webSocket = client.newWebSocket(request, listener)
-
-    Column(Modifier.padding(16.dp)) {
-        Text(text = messages)
-        Spacer(modifier = Modifier.height(16.dp))
-        TextField(value = message, onValueChange = { message = it })
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            if (message.isNotEmpty()) {
-                webSocket.send(message)
-                message = ""
-            }
-        }) {
-            Text("Send")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun shiw() {
-    MyApp()
-}
