@@ -26,6 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -42,8 +46,58 @@ class MainUiWebsocket : ComponentActivity() {
 
         setContent {
             JetPackShopTheme {
-                WebSocketDemo()
+                MyApp()
             }
+        }
+    }
+}
+
+
+@Composable
+fun MyApp() {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(navController)
+        }
+        composable("chat") {
+            WebSocketDemo()
+        }
+    }
+}
+
+@Composable
+fun LoginScreen(navController: NavController) {
+    var username by remember { mutableStateOf("") }
+    var roomName by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = roomName,
+            onValueChange = { roomName = it },
+            label = { Text("Room Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = {
+                navController.navigate("chat")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Join Chat")
         }
     }
 }
@@ -57,15 +111,11 @@ fun WebSocketDemo() {
     val request = Request.Builder().url("ws://192.168.128.1:2020/ws/app/").build()
     val listener = object : WebSocketListener() {
         override fun onMessage(webSocket: WebSocket, text: String) {
-            GlobalScope.launch(Dispatchers.Main) {
-                messages += "$text\n"
-            }
+            messages += "$text\n"
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            GlobalScope.launch(Dispatchers.Main) {
-                messages += "Error: ${t.message}\n"
-            }
+            messages += "Error: ${t.message}\n"
         }
     }
 
@@ -89,6 +139,6 @@ fun WebSocketDemo() {
 
 @Preview(showBackground = true)
 @Composable
-fun WebSocketDemoPreview() {
-    WebSocketDemo()
+fun shiw() {
+    MyApp()
 }
