@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -65,7 +67,7 @@ class MainUiWebsocket : ComponentActivity() {
 
         setContent {
             JetPackShopTheme {
-                WebSocketChatUI()
+                MainNavigation()
             }
         }
     }
@@ -73,9 +75,76 @@ class MainUiWebsocket : ComponentActivity() {
 
 
 @Composable
-fun WebSocketChatUI() {
+fun MainNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "LoginScreen") {
+        composable("LoginScreen") {
+            ScreenLogin(navController)
+        }
+        composable(
+            "ChatScreen/{username}/{roomName}",
+            arguments = listOf(
+                navArgument("username") { type = NavType.StringType },
+                navArgument("roomName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val username = backStackEntry.arguments?.getString("username") ?: ""
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            WebSocketChatUI(username, roomName)
+        }
+    }
+}
+
+@Composable
+fun ScreenLogin(navController: NavController) {
     var username by remember { mutableStateOf("") }
     var roomName by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TextField(
+            value = username,
+            onValueChange = { username = it },
+            placeholder = { Text("Enter your username") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        )
+
+        TextField(
+            value = roomName,
+            onValueChange = { roomName = it },
+            placeholder = { Text("Enter room name") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                if (username.isNotEmpty() && roomName.isNotEmpty()) {
+                    val cleanUsername = username.trim()
+                    val cleanRoomName = roomName.trim()
+                    navController.navigate("ChatScreen/$cleanUsername/$cleanRoomName")
+                }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Login")
+        }
+    }
+}
+
+@Composable
+fun WebSocketChatUI(username: String, roomName: String) {
     var message by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<ChatMessage>() }
     val scope = rememberCoroutineScope()
@@ -84,6 +153,12 @@ fun WebSocketChatUI() {
     var isConnected by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
+        val url = "ws://192.168.1.105:2020/ws/app/$roomName/$username/"
+        webSocketClient.connectWebSocket(url) { text ->
+            messages.add(ChatMessage(text, false))
+        }
+        isConnected = true
+
         onDispose {
             webSocketClient.closeWebSocket()
         }
@@ -94,99 +169,53 @@ fun WebSocketChatUI() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        if (!isConnected) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Chat Room: $roomName",
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        Divider(color = Color.Gray, thickness = 1.dp)
 
-                TextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    placeholder = { Text("Enter your username") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                )
-
-                TextField(
-                    value = roomName,
-                    onValueChange = { roomName = it },
-                    placeholder = { Text("Enter room name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                )
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(messages.reversed()) { msg ->
+                MessageBubble(message = msg.content, isSentByUser = msg.isSentByUser)
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextField(
+                value = message,
+                onValueChange = { message = it },
+                placeholder = { Text("Type a message...") },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 4.dp)
+            )
+            IconButton(
                 onClick = {
-                    if (username.isNotEmpty() && roomName.isNotEmpty()) {
-                        // حذف فاصله‌های اضافی
-                        val cleanUsername = username.trim()
-                        val cleanRoomName = roomName.trim()
+                    if (message.isNotEmpty()) {
+                        val jsonMessage = JSONObject().apply {
+                            put("message", message)
+                        }.toString()
 
-                        val url = "ws://192.168.1.110:2020/ws/app/$cleanRoomName/$cleanUsername/"
-                        webSocketClient.connectWebSocket(url) { text ->
-                            // بقیه کدها به همان صورت قبل
-                        }
-                        isConnected = true
+                        webSocketClient.sendMessage(jsonMessage)
+                        messages.add(ChatMessage(message, true))
+                        message = ""
                     }
                 },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.padding(start = 8.dp)
             ) {
-                Text("Connect")
-            }
-
-        } else {
-            // نمایش صفحه چت بدون کاربران آنلاین
-            Text(
-                text = "Chat Room: $roomName",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-            Divider(color = Color.Gray, thickness = 1.dp)
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(messages.reversed()) { msg ->
-                    MessageBubble(message = msg.content, isSentByUser = msg.isSentByUser)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextField(
-                    value = message,
-                    onValueChange = { message = it },
-                    placeholder = { Text("Type a message...") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(vertical = 4.dp)
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Send Message",
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                IconButton(
-                    onClick = {
-                        if (message.isNotEmpty()) {
-                            val jsonMessage = JSONObject().apply {
-                                put("message", message)
-                            }.toString()
-
-                            webSocketClient.sendMessage(jsonMessage)
-                            messages.add(ChatMessage(message, true))
-                            message = ""
-                        }
-                    },
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Send Message",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
             }
         }
     }
 }
-
 
 @Composable
 fun MessageBubble(message: String, isSentByUser: Boolean) {
@@ -207,6 +236,7 @@ fun MessageBubble(message: String, isSentByUser: Boolean) {
         )
     }
 }
+
 
 
 data class ChatMessage(val content: String, val isSentByUser: Boolean)
