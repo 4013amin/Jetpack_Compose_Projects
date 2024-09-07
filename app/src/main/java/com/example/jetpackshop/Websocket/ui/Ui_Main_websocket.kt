@@ -163,25 +163,27 @@ fun ScreenLogin(navController: NavController) {
 fun WebSocketChatUI(username: String, roomName: String) {
     var message by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<Pair<String, String>>() }
+    var randomUser by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-
     val webSocketClient = remember { WebSocketClient(scope) }
     var isConnected by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     DisposableEffect(Unit) {
-        val url = "wss://mywebsocket.liara.run/ws/app/$roomName/$username/"
-//        val url = "ws://192.168.254.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.1.105:2020/ws/app/$roomName/$username/"
+
+//        val url = "wss://mywebsocket.liara.run/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             val json = JSONObject(receivedMessage)
-            val sender = json.getString("sender")
-            val messageText = json.getString("message")
-
-            // اضافه کردن پیام به لیست
-            messages.add(sender to messageText)
-
-            // نمایش اعلان
-            showNotification(context, "New message from $sender", messageText)
+            val action = json.optString("action")
+            if (action == "random_user_found") {
+                randomUser = json.getString("user")
+            } else {
+                val sender = json.getString("sender")
+                val messageText = json.getString("message")
+                messages.add(sender to messageText)
+                showNotification(context, "New message from $sender", messageText)
+            }
         }
         isConnected = true
 
@@ -197,8 +199,7 @@ fun WebSocketChatUI(username: String, roomName: String) {
     ) {
         Text(
             text = "Chat Room: $roomName",
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(vertical = 8.dp)
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
         )
         Divider(color = Color.Gray, thickness = 1.dp)
 
@@ -219,30 +220,35 @@ fun WebSocketChatUI(username: String, roomName: String) {
                     .weight(1f)
                     .padding(vertical = 4.dp)
             )
-            IconButton(
-                onClick = {
-                    if (message.isNotEmpty()) {
-                        val jsonMessage = JSONObject().apply {
-                            put("message", message)
-                            put("sender", username)
-                        }.toString()
-
-                        webSocketClient.sendMessage(jsonMessage)
-                        messages.add(username to message)
-                        message = ""
-                    }
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Send Message",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            IconButton(onClick = {
+                if (message.isNotEmpty()) {
+                    val jsonMessage = JSONObject().apply {
+                        put("message", message)
+                        put("sender", username)
+                    }.toString()
+                    webSocketClient.sendMessage(jsonMessage)
+                    messages.add(username to message)
+                    message = ""
+                }
+            }) {
+                Icon(Icons.Default.Send, contentDescription = "Send Message")
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            webSocketClient.sendMessage("find_random_user")
+        }) {
+            Text("Find Random User")
+        }
+
+        if (randomUser.isNotEmpty()) {
+            Text(text = "Random user found: $randomUser")
         }
     }
 }
+
 
 @Composable
 fun MessageBubble(sender: String, message: String) {
