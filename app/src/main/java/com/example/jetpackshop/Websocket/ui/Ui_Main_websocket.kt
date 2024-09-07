@@ -16,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -25,6 +27,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.jetpackshop.R
 import com.example.jetpackshop.Websocket.data.shared.PreferencesManager
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.CoroutineScope
@@ -70,6 +77,22 @@ fun MainNavigation(navController: NavController) {
     }
 }
 
+
+//lotiFiles
+@Composable
+fun LottieAnimationScreen() {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loginanimation))
+
+    LottieAnimation(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    )
+}
+
+
 @Composable
 fun ScreenLogin(navController: NavController) {
     val context = navController.context
@@ -77,11 +100,22 @@ fun ScreenLogin(navController: NavController) {
     var username by remember { mutableStateOf(preferencesManager.username ?: "") }
     var roomName by remember { mutableStateOf(preferencesManager.roomName ?: "") }
 
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(620.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        LottieAnimationScreen()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TextField(
@@ -124,6 +158,7 @@ fun ScreenLogin(navController: NavController) {
     }
 }
 
+
 @Composable
 fun WebSocketChatUI(username: String, roomName: String) {
     var message by remember { mutableStateOf("") }
@@ -132,6 +167,7 @@ fun WebSocketChatUI(username: String, roomName: String) {
 
     val webSocketClient = remember { WebSocketClient(scope) }
     var isConnected by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     DisposableEffect(Unit) {
         val url = "wss://mywebsocket.liara.run/ws/app/$roomName/$username/"
@@ -140,7 +176,12 @@ fun WebSocketChatUI(username: String, roomName: String) {
             val json = JSONObject(receivedMessage)
             val sender = json.getString("sender")
             val messageText = json.getString("message")
+
+            // اضافه کردن پیام به لیست
             messages.add(sender to messageText)
+
+            // نمایش اعلان
+            showNotification(context, "New message from $sender", messageText)
         }
         isConnected = true
 
@@ -270,5 +311,68 @@ class WebSocketClient(private val scope: CoroutineScope) {
             webSocket.close(1000, "Goodbye!")
         }
     }
+}
+
+//ForLogin
+//@Composable
+//fun ScreenLogin(navController: NavController) {
+//    val context = navController.context
+//    val preferencesManager = remember { PreferencesManager(context) }
+//    var username by remember { mutableStateOf(preferencesManager.username ?: "") }
+//    var roomName by remember { mutableStateOf(preferencesManager.roomName ?: "") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp),
+//        verticalArrangement = Arrangement.Center,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        TextField(
+//            value = username,
+//            onValueChange = { username = it },
+//            placeholder = { Text("Enter your username") },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 8.dp)
+//        )
+//
+//        TextField(
+//            value = roomName,
+//            onValueChange = { roomName = it },
+//            placeholder = { Text("Enter room name") },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 8.dp)
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        Button(
+//            onClick = {
+//                if (username.isNotEmpty() && roomName.isNotEmpty()) {
+//                    val cleanUsername = username.trim()
+//                    val cleanRoomName = roomName.trim()
+//
+//                    // Save the data in SharedPreferences
+//                    preferencesManager.username = cleanUsername
+//                    preferencesManager.roomName = cleanRoomName
+//
+//                    navController.navigate("ChatScreen/$cleanUsername/$cleanRoomName")
+//                }
+//            },
+//            modifier = Modifier.align(Alignment.CenterHorizontally)
+//        ) {
+//            Text("Login")
+//        }
+//    }
+//}
+
+
+@Preview(showBackground = true)
+@Composable
+fun showLogin_chat() {
+    val navController = rememberNavController()
+    ScreenLogin(navController)
 }
 
