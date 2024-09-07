@@ -43,6 +43,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
+import showNotification
 
 class MainUiWebsocket : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -170,7 +171,7 @@ fun WebSocketChatUI(username: String, roomName: String) {
     val context = LocalContext.current
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.1.105:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
 
 //        val url = "wss://mywebsocket.liara.run/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
@@ -318,62 +319,6 @@ class WebSocketClient(private val scope: CoroutineScope) {
         }
     }
 }
-
-//ForLogin
-//@Composable
-//fun ScreenLogin(navController: NavController) {
-//    val context = navController.context
-//    val preferencesManager = remember { PreferencesManager(context) }
-//    var username by remember { mutableStateOf(preferencesManager.username ?: "") }
-//    var roomName by remember { mutableStateOf(preferencesManager.roomName ?: "") }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        TextField(
-//            value = username,
-//            onValueChange = { username = it },
-//            placeholder = { Text("Enter your username") },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(vertical = 8.dp)
-//        )
-//
-//        TextField(
-//            value = roomName,
-//            onValueChange = { roomName = it },
-//            placeholder = { Text("Enter room name") },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(vertical = 8.dp)
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Button(
-//            onClick = {
-//                if (username.isNotEmpty() && roomName.isNotEmpty()) {
-//                    val cleanUsername = username.trim()
-//                    val cleanRoomName = roomName.trim()
-//
-//                    // Save the data in SharedPreferences
-//                    preferencesManager.username = cleanUsername
-//                    preferencesManager.roomName = cleanRoomName
-//
-//                    navController.navigate("ChatScreen/$cleanUsername/$cleanRoomName")
-//                }
-//            },
-//            modifier = Modifier.align(Alignment.CenterHorizontally)
-//        ) {
-//            Text("Login")
-//        }
-//    }
-//}
-
 
 @Preview(showBackground = true)
 @Composable
