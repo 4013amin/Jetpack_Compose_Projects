@@ -28,8 +28,6 @@ class WeatherViewModel : ViewModel() {
 }
 
 
-
-
 class WeatherRepository {
     private val api = WeatherApi.create() // یا از Dependency Injection استفاده کنید
 

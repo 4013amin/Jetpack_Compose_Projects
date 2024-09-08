@@ -164,27 +164,20 @@ fun ScreenLogin(navController: NavController) {
 fun WebSocketChatUI(username: String, roomName: String) {
     var message by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<Pair<String, String>>() }
-    var randomUser by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val webSocketClient = remember { WebSocketClient(scope) }
     var isConnected by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.1.105:2020/ws/app/$roomName/$username/"
 
-//        val url = "wss://mywebsocket.liara.run/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             val json = JSONObject(receivedMessage)
-            val action = json.optString("action")
-            if (action == "random_user_found") {
-                randomUser = json.getString("user")
-            } else {
-                val sender = json.getString("sender")
-                val messageText = json.getString("message")
-                messages.add(sender to messageText)
-                showNotification(context, "New message from $sender", messageText)
-            }
+            val sender = json.getString("sender")
+            val messageText = json.getString("message")
+            messages.add(sender to messageText)
+            showNotification(context, "New message from $sender", messageText)
         }
         isConnected = true
 
@@ -234,18 +227,6 @@ fun WebSocketChatUI(username: String, roomName: String) {
             }) {
                 Icon(Icons.Default.Send, contentDescription = "Send Message")
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = {
-            webSocketClient.sendMessage("find_random_user")
-        }) {
-            Text("Find Random User")
-        }
-
-        if (randomUser.isNotEmpty()) {
-            Text(text = "Random user found: $randomUser")
         }
     }
 }
