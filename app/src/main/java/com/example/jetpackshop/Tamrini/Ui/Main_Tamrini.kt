@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,9 +24,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +61,7 @@ import com.example.jetpackshop.Tamrini_new.lazycolumn
 import com.example.jetpackshop.shop.data.models.Facts
 import com.example.jetpackshop.shop.data.models.Users_ModelItem
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
+import com.google.firebase.database.core.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -78,35 +86,54 @@ class Main_Tamrini : androidx.activity.ComponentActivity() {
 fun ShowGEtData(viewModelsTamrini: ViewModelsTamrini = viewModel()) {
 
     val data = viewModelsTamrini.data
+    val content = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModelsTamrini.getData()
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(15.dp)
-            .background(color = Color.White)
-    ) {
-        items(data.value) { item -> // Directly pass the data list
-            GEtDataItem(
-                body = item.body,
-                title = item.title,
-                userId = item.userId
-            )
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    viewModelsTamrini.sendData("this is testi is Amin", "4013_amin", content)
+                },
+                containerColor = Color(0xFFFF5722)
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White)
+            }
+        },
+        content = { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(color = Color.White)
+            ) {
+                items(data.value) { item ->
+                    GEtDataItem(
+                        body = item.body,
+                        title = item.title,
+                        userId = item.userId,
+                        delete = {
+                            viewModelsTamrini.deleteData(item.id, content)
+                        }
+                    )
+                }
+            }
         }
-    }
+    )
 }
 
 
 @Composable
-fun GEtDataItem(body: String, title: String, userId: Int) {
+fun GEtDataItem(body: String, title: String, userId: Int, delete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp) // Adds padding around the card for spacing
             .clip(RoundedCornerShape(4.dp))
+            .clickable { delete() }
     ) {
         // محتوا داخل کارت
         Text(
