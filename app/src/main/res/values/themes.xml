@@ -2,4 +2,6 @@
 <resources>
 
     <style name="Theme.JetPackShop" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.NewData" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>
