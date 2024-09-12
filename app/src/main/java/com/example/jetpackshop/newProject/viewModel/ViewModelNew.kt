@@ -2,6 +2,7 @@ package com.example.jetpackshop.newProject.viewModel
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,13 +29,27 @@ class ViewModelNew(application: Application) : AndroidViewModel(application) {
 
             if (response.isSuccessful && response.body() != null) {
                 data.value = response.body()!!
+                Log.d("Response", response.body().toString())
+
             }
         }
     }
 
 
     fun getAllNewData() {
+        viewModelScope.launch {
+            val response = try {
+                RetrofitNewInctance.api.getDataNew()
+            } catch (e: IOException) {
+                return@launch
+            } catch (e: HttpException) {
+                return@launch
+            }
 
+            if (response.isSuccessful && response.body() != null) {
+                data.value = response.body()!!
+            }
+        }
     }
 
 
