@@ -2,6 +2,7 @@ package com.example.jetpackshop.Websocket.ui
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -46,6 +47,7 @@ import com.example.jetpackshop.R
 import com.example.jetpackshop.Websocket.data.shared.PreferencesManager
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,6 +59,11 @@ import okio.ByteString
 import org.json.JSONException
 import org.json.JSONObject
 import showNotification
+import java.io.InputStream
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 
 class MainUiWebsocket : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -177,9 +184,14 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val scope = rememberCoroutineScope()
     val webSocketClient = remember { WebSocketClient(scope) }
 
-    // برای مدیریت ارسال فایل
     val context = LocalContext.current
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+
+    val selectFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedFileUri = uri
+    }
 
     DisposableEffect(Unit) {
         val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
@@ -199,7 +211,6 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
         }
     }
 
-    // UI for chat messages and sending new messages or files
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -207,19 +218,15 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     ) {
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(messages) { (sender, msg) ->
-                val isSentByUser = sender == username
-                MessageBubble(sender = sender, message = msg, isSentByUser = isSentByUser)
+                MessageBubble(sender = sender, message = msg, isSentByUser = sender == username)
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // بخش ارسال پیام و فایل
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextField(
                 value = message,
                 onValueChange = { message = it },
-                placeholder = { Text("پیام را وارد کنید...") },
+                placeholder = { Text("Enter your message...") },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
                 modifier = Modifier.weight(1f)
             )
@@ -242,36 +249,46 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // انتخاب فایل
-        Button(onClick = {
-            // باز کردن انتخابگر فایل
-            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                type = "*/*" // می‌توانید به صورت جداگانه فایل‌های عکس، ویس یا غیره را مشخص کنید
-            }
-            val pickerIntent = Intent.createChooser(intent, "Select File")
-            (context as Activity).startActivityForResult(pickerIntent, 123)
-        }) {
-            Text("انتخاب فایل")
+        Button(onClick = { selectFileLauncher.launch("*/*") }) {
+            Text("Select File")
         }
 
-        // اگر فایل انتخاب شد، نمایش آن
         selectedFileUri?.let { uri ->
-            Text("فایل انتخاب شده: $uri")
+            Text("Selected file: ${uri.lastPathSegment}")
             IconButton(onClick = {
-                // ارسال فایل به WebSocket (می‌توانید آن را تبدیل به Base64 کنید و سپس ارسال کنید)
-                val jsonMessage = JSONObject().apply {
-                    put("type", "file")
-                    put(
-                        "file_uri",
-                        uri.toString()
-                    )  // می‌توانید فایل را بخوانید و به Base64 تبدیل کنید
-                    put("sender", username)
+                val base64File = handleFileSelection(context, uri)
+                if (base64File != null) {
+                    val jsonMessage = JSONObject().apply {
+                        put("type", "file")
+                        put("file_content", base64File)
+                        put("file_name", uri.lastPathSegment ?: "file")
+                        put("sender", username)
+                    }
+                    webSocketClient.sendMessage(jsonMessage.toString())
+                } else {
+                    println("Error: File content is null or empty")
                 }
-                webSocketClient.sendMessage(jsonMessage.toString())
             }) {
                 Icon(Icons.Filled.Send, contentDescription = "Send File")
             }
         }
+    }
+}
+
+fun handleFileSelection(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+        val fileBytes = inputStream?.readBytes()
+        inputStream?.close()  // Close the stream to avoid memory leaks
+        if (fileBytes != null && fileBytes.isNotEmpty()) {
+            Base64.encodeToString(fileBytes, Base64.DEFAULT)
+        } else {
+            println("File is empty or could not be read")
+            null
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
 
