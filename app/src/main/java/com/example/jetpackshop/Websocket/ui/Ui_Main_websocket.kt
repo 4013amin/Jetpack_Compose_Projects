@@ -1,6 +1,9 @@
 package com.example.jetpackshop.Websocket.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,7 +45,6 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.jetpackshop.R
 import com.example.jetpackshop.Websocket.data.shared.PreferencesManager
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
-import com.google.firebase.firestore.auth.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -175,6 +177,10 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val scope = rememberCoroutineScope()
     val webSocketClient = remember { WebSocketClient(scope) }
 
+    // برای مدیریت ارسال فایل
+    val context = LocalContext.current
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+
     DisposableEffect(Unit) {
         val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
@@ -188,13 +194,12 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             }
         }
 
-
         onDispose {
             webSocketClient.closeWebSocket()
         }
     }
 
-    // UI for chat messages and sending new messages
+    // UI for chat messages and sending new messages or files
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -209,8 +214,8 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // بخش ارسال پیام و فایل
         Row(verticalAlignment = Alignment.CenterVertically) {
-
             TextField(
                 value = message,
                 onValueChange = { message = it },
@@ -226,7 +231,6 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                         put("message", message)
                         put("sender", username)
                     }
-                    println("Sending message: $jsonMessage")  // Add logging to verify
                     webSocketClient.sendMessage(jsonMessage.toString())
                     messages.add(username to message)
                     message = ""
@@ -234,7 +238,39 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             }) {
                 Icon(Icons.Filled.Send, contentDescription = "Send Message")
             }
+        }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // انتخاب فایل
+        Button(onClick = {
+            // باز کردن انتخابگر فایل
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "*/*" // می‌توانید به صورت جداگانه فایل‌های عکس، ویس یا غیره را مشخص کنید
+            }
+            val pickerIntent = Intent.createChooser(intent, "Select File")
+            (context as Activity).startActivityForResult(pickerIntent, 123)
+        }) {
+            Text("انتخاب فایل")
+        }
+
+        // اگر فایل انتخاب شد، نمایش آن
+        selectedFileUri?.let { uri ->
+            Text("فایل انتخاب شده: $uri")
+            IconButton(onClick = {
+                // ارسال فایل به WebSocket (می‌توانید آن را تبدیل به Base64 کنید و سپس ارسال کنید)
+                val jsonMessage = JSONObject().apply {
+                    put("type", "file")
+                    put(
+                        "file_uri",
+                        uri.toString()
+                    )  // می‌توانید فایل را بخوانید و به Base64 تبدیل کنید
+                    put("sender", username)
+                }
+                webSocketClient.sendMessage(jsonMessage.toString())
+            }) {
+                Icon(Icons.Filled.Send, contentDescription = "Send File")
+            }
         }
     }
 }
