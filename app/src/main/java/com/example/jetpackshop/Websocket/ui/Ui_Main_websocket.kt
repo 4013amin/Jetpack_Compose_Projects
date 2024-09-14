@@ -63,6 +63,7 @@ import java.io.InputStream
 import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.text.input.KeyboardCapitalization
 
 
 class MainUiWebsocket : ComponentActivity() {
@@ -129,6 +130,11 @@ fun ScreenLoginWithProfileImage(navController: NavController) {
     var username by remember { mutableStateOf(preferencesManager.username ?: "") }
     var roomName by remember { mutableStateOf(preferencesManager.roomName ?: "") }
 
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        LottieAnimationScreen()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -180,34 +186,27 @@ fun ScreenLoginWithProfileImage(navController: NavController) {
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
-    val messages = remember { mutableStateListOf<Pair<String, String>>() }
+    val messages =
+        remember { mutableStateListOf<Pair<String, String>>() } // Store messages as (sender, message)
     val scope = rememberCoroutineScope()
     val webSocketClient = remember { WebSocketClient(scope) }
 
-    val context = LocalContext.current
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-
-    val selectFileLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        selectedFileUri = uri
-    }
-
+    // Establish WebSocket connection when this composable is first displayed
     DisposableEffect(Unit) {
-        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.10.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
                 val sender = json.optString("sender", "Unknown")
                 val messageText = json.optString("message", "No message content")
-                messages.add(sender to messageText)
+                messages.add(sender to messageText) // Add received message to the list
             } catch (e: JSONException) {
                 println("Failed to parse WebSocket message: ${e.message}")
             }
         }
 
         onDispose {
-            webSocketClient.closeWebSocket()
+            webSocketClient.closeWebSocket() // Close the WebSocket when leaving the chat screen
         }
     }
 
@@ -216,64 +215,45 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Display chat messages
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(messages) { (sender, msg) ->
                 MessageBubble(sender = sender, message = msg, isSentByUser = sender == username)
             }
         }
 
+        // Input field and send button
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextField(
                 value = message,
                 onValueChange = { message = it },
                 placeholder = { Text("Enter your message...") },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Send,
+                    capitalization = KeyboardCapitalization.None
+                ),
                 modifier = Modifier.weight(1f)
             )
+
 
             IconButton(onClick = {
                 if (message.isNotEmpty()) {
                     val jsonMessage = JSONObject().apply {
-                        put("type", "message")
                         put("message", message)
-                        put("sender", username)
+                        put("sender", username) // Ensure sender is included correctly
                     }
-                    webSocketClient.sendMessage(jsonMessage.toString())
-                    messages.add(username to message)
-                    message = ""
+
+                    webSocketClient.sendMessage(jsonMessage.toString()) // Send message to the WebSocket
+                    messages.add(username to message) // Add sent message to the local list
+                    message = "" // Clear input field
                 }
             }) {
                 Icon(Icons.Filled.Send, contentDescription = "Send Message")
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = { selectFileLauncher.launch("*/*") }) {
-            Text("Select File")
-        }
-
-        selectedFileUri?.let { uri ->
-            Text("Selected file: ${uri.lastPathSegment}")
-            IconButton(onClick = {
-                val base64File = handleFileSelection(context, uri)
-                if (base64File != null) {
-                    val jsonMessage = JSONObject().apply {
-                        put("type", "file")
-                        put("file_content", base64File)
-                        put("file_name", uri.lastPathSegment ?: "file")
-                        put("sender", username)
-                    }
-                    webSocketClient.sendMessage(jsonMessage.toString())
-                } else {
-                    println("Error: File content is null or empty")
-                }
-            }) {
-                Icon(Icons.Filled.Send, contentDescription = "Send File")
-            }
-        }
     }
 }
+
 
 fun handleFileSelection(context: Context, uri: Uri): String? {
     return try {
@@ -330,7 +310,6 @@ fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
 data class ChatMessage(val content: String, val isSentByUser: Boolean)
 
 class WebSocketClient(private val scope: CoroutineScope) {
-
     private var webSocket: WebSocket? = null
     private val client = OkHttpClient()
 
@@ -338,24 +317,20 @@ class WebSocketClient(private val scope: CoroutineScope) {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-                println("WebSocket connected")
+                println("WebSocket connected to: $url")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                println("Message received: $text")  // Add this to see incoming messages
                 scope.launch(Dispatchers.Main) {
-                    onMessageReceived(text)
+                    println("Received message: $text")  // Log received message
+                    onMessageReceived(text) // Notify the composable of the received message
                 }
             }
 
 
-            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-                // Handle binary messages if needed
-            }
-
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 webSocket.close(1000, null)
-                println("WebSocket closing: $code / $reason")
+                println("WebSocket is closing: $code / $reason")
             }
 
             override fun onFailure(
@@ -370,8 +345,14 @@ class WebSocketClient(private val scope: CoroutineScope) {
     }
 
     fun sendMessage(message: String) {
-        webSocket?.send(message) ?: println("WebSocket is not connected")
+        if (webSocket != null) {
+            println("Sending message: $message")
+            webSocket?.send(message)
+        } else {
+            println("WebSocket is not connected")
+        }
     }
+
 
     fun closeWebSocket() {
         webSocket?.close(1000, "Goodbye!") ?: println("WebSocket is not connected")
