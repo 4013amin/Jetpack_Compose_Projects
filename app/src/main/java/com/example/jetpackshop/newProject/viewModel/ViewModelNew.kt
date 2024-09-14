@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jetpackshop.newProject.data.Models.Fields
 import com.example.jetpackshop.newProject.data.Utils.RetrofitNewInctance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 import retrofit2.HttpException
@@ -53,8 +54,21 @@ class ViewModelNew(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun deleteNewData() {
+    fun deleteNewData(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = try {
+                RetrofitNewInctance.api.deleteNewData(id)
+            } catch (e: IOException) {
+                return@launch
+            } catch (e: HttpException) {
+                return@launch
+            }
 
+            if (response.isSuccessful && response.body() != null) {
+                data.value = data.value.filter { it.id != id }
+            }
+
+        }
     }
 
 
