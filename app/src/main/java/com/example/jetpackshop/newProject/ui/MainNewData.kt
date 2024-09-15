@@ -210,12 +210,14 @@ fun getDataNew(viewModelNew: ViewModelNew = viewModel()) {
         viewModelNew.getAllNewData()
     }
 
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(userDataList) { userData ->
             UserCard(
                 userData,
                 delete = {
                     viewModelNew.deleteNewData(userData.id)
+                    viewModelNew.updateNewData(userData.id)
                 })
         }
     }

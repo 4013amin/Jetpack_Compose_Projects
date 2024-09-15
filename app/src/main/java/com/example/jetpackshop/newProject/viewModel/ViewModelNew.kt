@@ -72,7 +72,19 @@ class ViewModelNew(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun updateNewData() {
+    fun updateNewData(id: Int) {
+        viewModelScope.launch {
+            val response = try {
+                RetrofitNewInctance.api.updateNewData(id)
+            } catch (e: IOException) {
+                return@launch
+            } catch (e: HttpException) {
+                return@launch
+            }
+            if (response.isSuccessful && response.body() != null) {
+                data.value = data.value.filter { it.id != id }
+            }
+        }
 
     }
 
