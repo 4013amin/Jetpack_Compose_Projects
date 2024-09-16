@@ -210,7 +210,6 @@ fun getDataNew(viewModelNew: ViewModelNew = viewModel()) {
         viewModelNew.getAllNewData()
     }
 
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(userDataList) { userData ->
             UserCard(
