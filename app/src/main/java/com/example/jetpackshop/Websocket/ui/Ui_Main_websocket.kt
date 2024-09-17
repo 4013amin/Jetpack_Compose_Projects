@@ -193,7 +193,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
 
     // Establish WebSocket connection when this composable is first displayed
     DisposableEffect(Unit) {
-        val url = "ws://192.168.10.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
@@ -206,7 +206,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
         }
 
         onDispose {
-            webSocketClient.closeWebSocket() // Close the WebSocket when leaving the chat screen
+            webSocketClient.closeWebSocket()
         }
     }
 
@@ -327,7 +327,6 @@ class WebSocketClient(private val scope: CoroutineScope) {
                 }
             }
 
-
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 webSocket.close(1000, null)
                 println("WebSocket is closing: $code / $reason")
@@ -353,8 +352,8 @@ class WebSocketClient(private val scope: CoroutineScope) {
         }
     }
 
-
     fun closeWebSocket() {
         webSocket?.close(1000, "Goodbye!") ?: println("WebSocket is not connected")
     }
 }
+
