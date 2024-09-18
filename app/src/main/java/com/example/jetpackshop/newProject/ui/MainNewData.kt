@@ -79,8 +79,9 @@ class MainNewData : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-//                sendNewData()
-                getDataNew()
+////                sendNewData()
+//                getDataNew()
+                BannerScreen()
             }
         }
     }
