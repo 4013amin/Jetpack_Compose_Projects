@@ -135,7 +135,6 @@ fun GEtDataItem(body: String, title: String, userId: Int, delete: () -> Unit) {
             .clip(RoundedCornerShape(4.dp))
             .clickable { delete() }
     ) {
-        // محتوا داخل کارت
         Text(
             text = "Title: $title",
             fontWeight = FontWeight.SemiBold,

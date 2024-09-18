@@ -79,8 +79,8 @@ class MainNewData : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-                sendNewData()
-//                getDataNew()
+//                sendNewData()
+                getDataNew()
             }
         }
     }
@@ -212,17 +212,23 @@ fun getDataNew(viewModelNew: ViewModelNew = viewModel()) {
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(userDataList) { userData ->
-            UserCard(userData)
+            UserCard(
+                userData,
+                delete = {
+                    viewModelNew.deleteNewData(userData.id)
+                    viewModelNew.updateNewData(userData.id)
+                })
         }
     }
 }
 
 @Composable
-fun UserCard(userData: Fields) {
+fun UserCard(userData: Fields, delete: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { delete() },
         shape = MaterialTheme.shapes.medium
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
