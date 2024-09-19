@@ -1,18 +1,21 @@
 pluginManagement {
     repositories {
-        google()
         mavenCentral()
+        google()
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
         mavenCentral()
+        google()
+        maven {
+            url = uri("https://webrtc.github.io/repo/m2")
+        }
     }
 }
 
 rootProject.name = "JetPackShop"
 include(":app")
- 

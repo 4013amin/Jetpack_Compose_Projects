@@ -71,8 +71,9 @@ class MainUiWebsocket : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-                val navController = rememberNavController()
-                MainNavigation(navController)
+//                val navController = rememberNavController()
+//                MainNavigation(navController)
+                ConnectedVoiceChat()
             }
         }
     }
