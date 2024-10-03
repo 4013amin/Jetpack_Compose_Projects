@@ -61,9 +61,9 @@ import org.json.JSONObject
 import showNotification
 import java.io.InputStream
 import android.util.Base64
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.sp
 
 
 class MainUiWebsocket : ComponentActivity() {
@@ -71,9 +71,9 @@ class MainUiWebsocket : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-//                val navController = rememberNavController()
-//                MainNavigation(navController)
-                ConnectedVoiceChat()
+                val navController = rememberNavController()
+                MainNavigation(navController)
+                MainNavigation(navController)
             }
         }
     }
@@ -276,31 +276,41 @@ fun handleFileSelection(context: Context, uri: Uri): String? {
 
 @Composable
 fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
-    val backgroundColor =
-        if (isSentByUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+    val backgroundColor = if (isSentByUser) Color(0xFFBBDEFB) else Color(0xFFF5F5F5)
+    val textColor = if (isSentByUser) Color.White else Color.Black
     val alignment = if (isSentByUser) Alignment.End else Alignment.Start
+    val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
+    else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(8.dp)
+
     ) {
         Card(
             modifier = Modifier
-                .widthIn(max = 250.dp)
                 .background(backgroundColor)
-                .clip(RoundedCornerShape(8.dp)),
-            colors = CardDefaults.cardColors(
-                containerColor = backgroundColor
-            )
+                .padding(4.dp)
+                .clip(shape),
+            colors = CardDefaults.cardColors(containerColor = backgroundColor),
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
                 if (!isSentByUser) {
-                    Text(text = sender, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = sender,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                    )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = message,
-                    color = if (isSentByUser) Color.White else Color.Black
+                    color = textColor,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(8.dp)
                 )
             }
         }
