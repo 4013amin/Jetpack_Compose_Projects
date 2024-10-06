@@ -187,14 +187,12 @@ fun ScreenLoginWithProfileImage(navController: NavController) {
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
-    val messages =
-        remember { mutableStateListOf<Pair<String, String>>() } // Store messages as (sender, message)
+    val messages = remember { mutableStateListOf<Pair<String, String>>() }
     val scope = rememberCoroutineScope()
     val webSocketClient = remember { WebSocketClient(scope) }
 
-    // Establish WebSocket connection when this composable is first displayed
     DisposableEffect(Unit) {
-        val url = "ws://192.168.1.110:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.36.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
@@ -216,14 +214,12 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Display chat messages
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(messages) { (sender, msg) ->
                 MessageBubble(sender = sender, message = msg, isSentByUser = sender == username)
             }
         }
 
-        // Input field and send button
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextField(
                 value = message,
@@ -236,16 +232,15 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 modifier = Modifier.weight(1f)
             )
 
-
             IconButton(onClick = {
                 if (message.isNotEmpty()) {
                     val jsonMessage = JSONObject().apply {
                         put("message", message)
-                        put("sender", username) // Ensure sender is included correctly
+                        put("sender", username)
                     }
 
-                    webSocketClient.sendMessage(jsonMessage.toString()) // Send message to the WebSocket
-                    messages.add(username to message) // Add sent message to the local list
+                    webSocketClient.sendMessage(jsonMessage.toString())
+                    messages.add(username to message)
                     message = "" // Clear input field
                 }
             }) {
