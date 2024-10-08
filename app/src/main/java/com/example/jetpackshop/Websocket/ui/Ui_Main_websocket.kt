@@ -203,48 +203,62 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 println("Failed to parse WebSocket message: ${e.message}")
             }
         }
-
         onDispose {
             webSocketClient.closeWebSocket()
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF0F0F0)) // Light gray background for the chat screen
             .padding(16.dp)
     ) {
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(messages) { (sender, msg) ->
-                MessageBubble(sender = sender, message = msg, isSentByUser = sender == username)
-            }
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextField(
-                value = message,
-                onValueChange = { message = it },
-                placeholder = { Text("Enter your message...") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Send,
-                    capitalization = KeyboardCapitalization.None
-                ),
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(onClick = {
-                if (message.isNotEmpty()) {
-                    val jsonMessage = JSONObject().apply {
-                        put("message", message)
-                        put("sender", username)
-                    }
-
-                    webSocketClient.sendMessage(jsonMessage.toString())
-                    messages.add(username to message)
-                    message = "" // Clear input field
+        Column(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(messages) { (sender, msg) ->
+                    MessageBubble(sender = sender, message = msg, isSentByUser = sender == username)
                 }
-            }) {
-                Icon(Icons.Filled.Send, contentDescription = "Send Message")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextField(
+                    value = message,
+                    onValueChange = { message = it },
+                    placeholder = { Text("Enter your message...") },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Send,
+                        capitalization = KeyboardCapitalization.None
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+
+                    )
+
+                IconButton(onClick = {
+                    if (message.isNotEmpty()) {
+                        val jsonMessage = JSONObject().apply {
+                            put("message", message)
+                            put("sender", username)
+                        }
+
+                        webSocketClient.sendMessage(jsonMessage.toString())
+                        messages.add(username to message)
+                        message = "" // Clear input field
+                    }
+                }) {
+                    Icon(
+                        Icons.Filled.Send,
+                        contentDescription = "Send Message",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -268,10 +282,9 @@ fun handleFileSelection(context: Context, uri: Uri): String? {
     }
 }
 
-
 @Composable
 fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
-    val backgroundColor = if (isSentByUser) Color(0xFFBBDEFB) else Color(0xFFF5F5F5)
+    val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
     val textColor = if (isSentByUser) Color.White else Color.Black
     val alignment = if (isSentByUser) Alignment.End else Alignment.Start
     val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
@@ -280,17 +293,14 @@ fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-
+            .padding(horizontal = 8.dp)
     ) {
         Card(
-            modifier = Modifier
-                .background(backgroundColor)
-                .padding(4.dp)
-                .clip(shape),
-            colors = CardDefaults.cardColors(containerColor = backgroundColor),
+            shape = shape,
+            elevation = CardDefaults.cardElevation(4.dp),
+            colors = CardDefaults.cardColors(containerColor = backgroundColor)
         ) {
-            Column(modifier = Modifier.padding(8.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 if (!isSentByUser) {
                     Text(
                         text = sender,
@@ -304,14 +314,12 @@ fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
                     text = message,
                     color = textColor,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(8.dp)
+                    fontSize = 14.sp
                 )
             }
         }
     }
 }
-
 
 data class ChatMessage(val content: String, val isSentByUser: Boolean)
 
