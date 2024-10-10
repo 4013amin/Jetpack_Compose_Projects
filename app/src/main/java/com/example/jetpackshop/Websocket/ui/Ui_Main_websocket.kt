@@ -1,11 +1,15 @@
 package com.example.jetpackshop.Websocket.ui
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -61,14 +65,37 @@ import org.json.JSONObject
 import showNotification
 import java.io.InputStream
 import android.util.Base64
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import java.io.File
+import java.io.IOException
 
 
 class MainUiWebsocket : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        // Request necessary permissions
+        val requestPermissionsLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                // Handle permission result
+            }
+
+        requestPermissionsLauncher.launch(
+            arrayOf(
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.INTERNET
+            )
+        )
+
+
         setContent {
             JetPackShopTheme {
                 val navController = rememberNavController()
@@ -184,6 +211,90 @@ fun ScreenLoginWithProfileImage(navController: NavController) {
     }
 }
 
+
+@Composable
+fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
+    val context = LocalContext.current
+    var isRecording by remember { mutableStateOf(false) }
+    var mediaRecorder: MediaRecorder? = remember { null }
+    var audioFile: File? by remember { mutableStateOf(null) }
+    var showToast by remember { mutableStateOf("") }
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            showToast = "Permission to record audio is denied."
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
+    if (showToast.isNotEmpty()) {
+        Toast.makeText(context, showToast, Toast.LENGTH_SHORT).show()
+        showToast = ""
+    }
+
+
+    Button(
+        onClick = {
+            if (isRecording) {
+                try {
+                    mediaRecorder?.apply {
+                        stop()
+                        release()
+                    }
+                    mediaRecorder = null
+                    isRecording = false
+                    audioFile?.let {
+                        onVoiceRecorded(it)
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        "Error stopping recording: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } else {
+                try {
+                    val fileName =
+                        "${context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)}/recording.3gp"
+                    audioFile = File(fileName)
+
+                    mediaRecorder = MediaRecorder().apply {
+                        setAudioSource(MediaRecorder.AudioSource.MIC)
+                        setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                        setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                        setOutputFile(fileName)
+                        prepare()
+                        start()
+                    }
+                    isRecording = true
+                } catch (e: IOException) {
+                    Toast.makeText(context, "Recording failed: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        },
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isRecording) Color.Red else MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(if (isRecording) "Stop Recording" else "Start Recording")
+    }
+}
+
+
+
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
@@ -198,7 +309,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 val json = JSONObject(receivedMessage)
                 val sender = json.optString("sender", "Unknown")
                 val messageText = json.optString("message", "No message content")
-                messages.add(sender to messageText) // Add received message to the list
+                messages.add(sender to messageText)
             } catch (e: JSONException) {
                 println("Failed to parse WebSocket message: ${e.message}")
             }
@@ -211,7 +322,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF0F0F0)) // Light gray background for the chat screen
+            .background(Color(0xFFF0F0F0))
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -238,8 +349,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
-
-                    )
+                )
 
                 IconButton(onClick = {
                     if (message.isNotEmpty()) {
@@ -260,10 +370,20 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                     )
                 }
             }
+
+            VoiceRecordingButton { recordedFile ->
+                val audioBytes = recordedFile.readBytes()
+                val base64Audio = Base64.encodeToString(audioBytes, Base64.DEFAULT)
+                val jsonMessage = JSONObject().apply {
+                    put("voice_data", base64Audio) // تغییر کلید به "voice_data"
+                    put("sender", username)
+                }
+
+                webSocketClient.sendMessage(jsonMessage.toString())
+            }
         }
     }
 }
-
 
 fun handleFileSelection(context: Context, uri: Uri): String? {
     return try {
