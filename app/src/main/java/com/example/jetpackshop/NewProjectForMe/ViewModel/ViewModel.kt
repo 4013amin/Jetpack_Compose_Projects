@@ -14,7 +14,7 @@ import okhttp3.MultipartBody
 class ViewModel(application: Application) : AndroidViewModel(application) {
 
     var data = mutableStateOf<List<ModelsDataForMe>>(arrayListOf())
-    var number = 0
+    var number = mutableStateOf(0)
 
     fun sendData(image: MultipartBody.Part, username: String, password: String) {
         viewModelScope.launch {
@@ -34,8 +34,8 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
 
     }
 
-    fun AddNumber (){
-        number++
+    fun AddNumber() {
+        number.value += 1
     }
 
 }

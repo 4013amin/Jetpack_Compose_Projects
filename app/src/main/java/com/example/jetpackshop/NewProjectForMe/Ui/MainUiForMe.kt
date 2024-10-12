@@ -49,8 +49,7 @@ class MainUiForMe : ComponentActivity() {
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun AddNumber(viewModel: ViewModel) {
-
-    var countNumber = mutableStateOf(0)
+    val number by viewModel.number
 
     Column(
         modifier = Modifier
@@ -58,7 +57,7 @@ fun AddNumber(viewModel: ViewModel) {
             .padding(15.dp)
             .background(color = Color.White)
     ) {
-        Text(text = "${viewModel.number}", color = Color.Black, fontSize = 18.sp)
+        Text(text = "${number}", color = Color.Black, fontSize = 18.sp)
 
         Button(onClick = { viewModel.AddNumber() }) {
             Text(text = "Add Number")
