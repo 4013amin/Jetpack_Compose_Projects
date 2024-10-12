@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.jetpackshop.NewProjectForMe.data.models.ModelsDataForMe
 import com.example.jetpackshop.NewProjectForMe.data.utils.RetrodiInctanse
 import com.example.jetpackshop.newProject.data.Models.Fields
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 
@@ -33,6 +34,22 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         }
 
     }
+
+    fun getData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = try {
+                RetrodiInctanse.api.getData()
+            }catch (e: Exception) {
+                Log.e("Error", "Exception occurred: ${e.message}", e)
+                return@launch
+            }
+
+            if (response.isSuccessful && response.body() != null){
+                data.value = response.body()!!
+            }
+        }
+    }
+
 
     fun AddNumber() {
         number.value += 1

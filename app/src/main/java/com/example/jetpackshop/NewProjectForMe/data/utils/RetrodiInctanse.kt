@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrodiInctanse {
 
-    const val bas = "http://192.168.36.101:2020/"
+    const val bas = "http://192.168.149.101:2020/"
 
     val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

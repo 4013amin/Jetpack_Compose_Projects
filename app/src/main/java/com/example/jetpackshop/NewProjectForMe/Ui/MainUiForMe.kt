@@ -23,9 +23,13 @@ import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import java.io.File
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -36,7 +40,8 @@ class MainUiForMe : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-
+                val viewModel: ViewModel = viewModel()
+                getData(viewModel)
             }
         }
     }
@@ -112,7 +117,8 @@ fun UserForm(viewModel: ViewModel = viewModel()) {
         Button(onClick = {
             imageUri?.let { uri ->
                 val file = getFileFromUri(uri, context)
-                val imagePart = MultipartBody.Part.createFormData("image", file.name, file.asRequestBody())
+                val imagePart =
+                    MultipartBody.Part.createFormData("image", file.name, file.asRequestBody())
                 viewModel.sendData(imagePart, username, password)
             }
         }) {
@@ -131,3 +137,76 @@ fun getFileFromUri(uri: Uri, context: Context): File {
     }
     return file
 }
+
+
+@Composable
+fun getData(
+    viewModel: ViewModel
+) {
+    val data = viewModel.data
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentWidth()
+            .padding(2.dp), verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        items(data.value) {
+            DataItem(
+                imageUrl = it.image,
+                username = it.username,
+                password = it.password
+            )
+        }
+
+    }
+
+}
+
+@Composable
+fun DataItem(
+    imageUrl: String,
+    username: String,
+    password: String,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)
+        .background(Color.LightGray)
+        .padding(16.dp)
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        // Image display
+        ImageLoader(
+            imageUrl = imageUrl,
+            modifier = Modifier
+                .size(64.dp)
+                .padding(end = 8.dp)
+        )
+
+        // User info
+        Column {
+            Text(text = "Username: $username", fontSize = 16.sp, color = Color.Black)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Password: $password", fontSize = 14.sp, color = Color.Gray)
+        }
+    }
+}
+
+// Helper function to load images
+@Composable
+fun ImageLoader(imageUrl: String, modifier: Modifier = Modifier) {
+    val painter = rememberAsyncImagePainter(imageUrl)
+    Image(
+        painter = painter,
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = ContentScale.Crop
+    )
+}
+
