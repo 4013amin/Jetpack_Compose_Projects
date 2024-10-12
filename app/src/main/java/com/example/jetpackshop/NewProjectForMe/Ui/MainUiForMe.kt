@@ -37,118 +37,97 @@ class MainUiForMe : ComponentActivity() {
         setContent {
             JetPackShopTheme {
 
-                val viewModel: ViewModel = viewModel()
-
-                AddNumber(viewModel)
             }
         }
     }
 }
 
 
-@SuppressLint("UnrememberedMutableState")
+//Send Data With photo
+
 @Composable
-fun AddNumber(viewModel: ViewModel) {
-    val number by viewModel.number
+fun UserForm(viewModel: ViewModel = viewModel()) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val context = LocalContext.current
+
+    // Register the image picker
+    val getImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        imageUri = uri
+        uri?.let {
+            // Convert Uri to Bitmap if needed
+            bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(15.dp)
-            .background(color = Color.White)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "${number}", color = Color.Black, fontSize = 18.sp)
+        // Input field for username
+        TextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
-        Button(onClick = { viewModel.AddNumber() }) {
-            Text(text = "Add Number")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Input field for password
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { getImageLauncher.launch("image/*") }) {
+            Text("Select Image")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Display the selected image
+        bitmap?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = "Selected Image",
+                modifier = Modifier.size(200.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            imageUri?.let { uri ->
+                val file = getFileFromUri(uri, context)
+                val imagePart = MultipartBody.Part.createFormData("image", file.name, file.asRequestBody())
+                viewModel.sendData(imagePart, username, password)
+            }
+        }) {
+            Text("Submit")
         }
     }
 }
 
-
-//@Composable
-//fun UserForm(viewModel: ViewModel = viewModel()) {
-//    var username by remember { mutableStateOf("") }
-//    var password by remember { mutableStateOf("") }
-//    var imageUri by remember { mutableStateOf<Uri?>(null) }
-//    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-//
-//    val context = LocalContext.current
-//
-//    // Register the image picker
-//    val getImageLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.GetContent()
-//    ) { uri: Uri? ->
-//        imageUri = uri
-//        uri?.let {
-//            // Convert Uri to Bitmap if needed
-//            bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-//        }
-//    }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        // Input field for username
-//        TextField(
-//            value = username,
-//            onValueChange = { username = it },
-//            label = { Text("Username") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Input field for password
-//        TextField(
-//            value = password,
-//            onValueChange = { password = it },
-//            label = { Text("Password") },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Button(onClick = { getImageLauncher.launch("image/*") }) {
-//            Text("Select Image")
-//        }
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Display the selected image
-//        bitmap?.let {
-//            Image(
-//                bitmap = it.asImageBitmap(),
-//                contentDescription = "Selected Image",
-//                modifier = Modifier.size(200.dp)
-//            )
-//        }
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Button(onClick = {
-//            imageUri?.let { uri ->
-//                val file = getFileFromUri(uri, context)
-//                val imagePart = MultipartBody.Part.createFormData("image", file.name, file.asRequestBody())
-//                viewModel.sendData(imagePart, username, password)
-//            }
-//        }) {
-//            Text("Submit")
-//        }
-//    }
-//}
-//
-//fun getFileFromUri(uri: Uri, context: Context): File {
-//    val contentResolver = context.contentResolver
-//    val file = File(context.cacheDir, "image.jpg") // Temporary file
-//    contentResolver.openInputStream(uri)?.use { inputStream ->
-//        FileOutputStream(file).use { outputStream ->
-//            inputStream.copyTo(outputStream)
-//        }
-//    }
-//    return file
-//}
+fun getFileFromUri(uri: Uri, context: Context): File {
+    val contentResolver = context.contentResolver
+    val file = File(context.cacheDir, "image.jpg") // Temporary file
+    contentResolver.openInputStream(uri)?.use { inputStream ->
+        FileOutputStream(file).use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+    }
+    return file
+}
