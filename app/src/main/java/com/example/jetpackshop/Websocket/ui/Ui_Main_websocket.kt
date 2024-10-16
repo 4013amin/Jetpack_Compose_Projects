@@ -69,8 +69,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import java.io.File
@@ -294,7 +298,6 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
 }
 
 
-
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
@@ -303,7 +306,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val webSocketClient = remember { WebSocketClient(scope) }
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.36.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.41.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
@@ -341,15 +344,23 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 TextField(
                     value = message,
                     onValueChange = { message = it },
-                    placeholder = { Text("Enter your message...") },
+                    placeholder = { Text("پیام خود را وارد کنید...") },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Send,
-                        capitalization = KeyboardCapitalization.None
+                        capitalization = KeyboardCapitalization.None,
+                        keyboardType = KeyboardType.Text
                     ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
+                    textStyle = TextStyle(
+                        fontFamily = FontFamily.Default,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Right
+                    ),
+                    singleLine = true
                 )
+
 
                 IconButton(onClick = {
                     if (message.isNotEmpty()) {
