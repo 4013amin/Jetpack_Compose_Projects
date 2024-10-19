@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ProjectTamrin</string>
+    <string name="greeting">سلام</string>
+    <string name="title">عنوان</string>
+    <string name="SwichLanguage">تغییر زبان</string>
+</resources>
