@@ -1,24 +1,19 @@
 package com.example.jetpackshop.Websocket.ui
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -27,13 +22,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -42,7 +34,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import coil.compose.rememberAsyncImagePainter
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -51,18 +42,14 @@ import com.example.jetpackshop.R
 import com.example.jetpackshop.Websocket.data.shared.PreferencesManager
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import okio.ByteString
 import org.json.JSONException
 import org.json.JSONObject
-import showNotification
 import java.io.InputStream
 import android.util.Base64
 import android.util.Log
@@ -247,33 +234,18 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
         showToast = ""
     }
 
-
     Button(
         onClick = {
             if (isRecording) {
-                try {
-                    mediaRecorder?.apply {
-                        stop()
-                        release()
-                    }
-                    mediaRecorder = null
-                    isRecording = false
-                    audioFile?.let {
-                        onVoiceRecorded(it)
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        context,
-                        "Error stopping recording: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                mediaRecorder?.stop()
+                mediaRecorder?.release()
+                mediaRecorder = null
+                isRecording = false
+                audioFile?.let(onVoiceRecorded)
             } else {
                 try {
-                    val fileName =
-                        "${context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)}/recording.3gp"
+                    val fileName = "${context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)}/recording.3gp"
                     audioFile = File(fileName)
-
                     mediaRecorder = MediaRecorder().apply {
                         setAudioSource(MediaRecorder.AudioSource.MIC)
                         setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
@@ -284,8 +256,7 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
                     }
                     isRecording = true
                 } catch (e: IOException) {
-                    Toast.makeText(context, "Recording failed: ${e.message}", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(context, "Recording failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         },
@@ -306,15 +277,21 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val webSocketClient = remember { WebSocketClient(scope) }
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.41.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.60.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
                 val sender = json.optString("sender", "Unknown")
-                val messageText = json.optString("message", "No message content")
-                messages.add(sender to messageText)
+
+                if (json.has("voice_data")) {
+                    val voiceData = json.optString("voice_data", "")
+                    messages.add(sender to voiceData)
+                } else {
+                    val messageText = json.optString("message", "No message content")
+                    messages.add(sender to messageText)
+                }
             } catch (e: JSONException) {
-                println("Failed to parse WebSocket message: ${e.message}")
+                Log.e("WebSocketChatUI", "Failed to parse WebSocket message: ${e.message}")
             }
         }
         onDispose {
@@ -336,7 +313,19 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages) { (sender, msg) ->
-                    MessageBubble(sender = sender, message = msg, isSentByUser = sender == username)
+                    if (msg.startsWith("/9j/")) {
+                        VoiceMessageBubble(
+                            sender = sender,
+                            audioData = msg,
+                            isSentByUser = sender == username
+                        )
+                    } else {
+                        MessageBubble(
+                            sender = sender,
+                            message = msg,
+                            isSentByUser = sender == username
+                        )
+                    }
                 }
             }
 
@@ -361,7 +350,6 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                     singleLine = true
                 )
 
-
                 IconButton(onClick = {
                     if (message.isNotEmpty()) {
                         val jsonMessage = JSONObject().apply {
@@ -371,7 +359,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
 
                         webSocketClient.sendMessage(jsonMessage.toString())
                         messages.add(username to message)
-                        message = "" // Clear input field
+                        message = ""
                     }
                 }) {
                     Icon(
@@ -386,7 +374,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 val audioBytes = recordedFile.readBytes()
                 val base64Audio = Base64.encodeToString(audioBytes, Base64.DEFAULT)
                 val jsonMessage = JSONObject().apply {
-                    put("voice_data", base64Audio) // تغییر کلید به "voice_data"
+                    put("voice_data", base64Audio)
                     put("sender", username)
                 }
 
@@ -395,6 +383,72 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
         }
     }
 }
+
+
+@Composable
+fun VoiceMessageBubble(sender: String, audioData: String, isSentByUser: Boolean) {
+    val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
+    val textColor = if (isSentByUser) Color.White else Color.Black
+    val alignment = if (isSentByUser) Alignment.End else Alignment.Start
+    val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
+    else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
+        Card(
+            shape = shape,
+            elevation = CardDefaults.cardElevation(4.dp),
+            colors = CardDefaults.cardColors(containerColor = backgroundColor)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                if (!isSentByUser) {
+                    Text(
+                        text = sender,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(onClick = {
+                    // Provide feedback to the user
+                    val decodedBytes = Base64.decode(audioData, Base64.DEFAULT)
+                    playAudioFromByteArray(decodedBytes)
+                }) {
+                    Text(
+                        text = "Play Voice Message",
+                        color = textColor,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+private fun playAudioFromByteArray(audioBytes: ByteArray) {
+    val tempFile = File.createTempFile("audio", ".3gp", Environment.getExternalStorageDirectory())
+    try {
+        tempFile.writeBytes(audioBytes)
+        val mediaPlayer = MediaPlayer()
+        mediaPlayer.setDataSource(tempFile.absolutePath)
+        mediaPlayer.prepare()
+        mediaPlayer.start()
+
+        mediaPlayer.setOnCompletionListener {
+            it.release() // Release the MediaPlayer once playback is complete
+            tempFile.delete() // Delete the temporary file after use
+        }
+    } catch (e: IOException) {
+        Log.e("AudioPlayback", "Error playing audio: ${e.message}")
+    }
+}
+
 
 fun handleFileSelection(context: Context, uri: Uri): String? {
     return try {
