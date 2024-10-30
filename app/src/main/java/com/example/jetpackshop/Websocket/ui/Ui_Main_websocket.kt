@@ -56,6 +56,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 
@@ -244,7 +245,8 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
                 audioFile?.let(onVoiceRecorded)
             } else {
                 try {
-                    val fileName = "${context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)}/recording.3gp"
+                    val fileName =
+                        "${context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)}/recording.3gp"
                     audioFile = File(fileName)
                     mediaRecorder = MediaRecorder().apply {
                         setAudioSource(MediaRecorder.AudioSource.MIC)
@@ -256,7 +258,8 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
                     }
                     isRecording = true
                 } catch (e: IOException) {
-                    Toast.makeText(context, "Recording failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Recording failed: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         },
@@ -277,7 +280,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val webSocketClient = remember { WebSocketClient(scope) }
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.60.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.75.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
@@ -384,7 +387,6 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     }
 }
 
-
 @Composable
 fun VoiceMessageBubble(sender: String, audioData: String, isSentByUser: Boolean) {
     val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
@@ -393,42 +395,56 @@ fun VoiceMessageBubble(sender: String, audioData: String, isSentByUser: Boolean)
     val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
     else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
 
+    val context = LocalContext.current
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var isPlaying by remember { mutableStateOf(false) }
+
+    val playAudio = {
+        try {
+            if (mediaPlayer == null) {
+                val decodedBytes = Base64.decode(audioData, Base64.DEFAULT)
+                val tempFile = File.createTempFile("tempAudio", "3gp", context.cacheDir).apply {
+                    writeBytes(decodedBytes)
+                }
+                mediaPlayer = MediaPlayer().apply {
+                    setDataSource(tempFile.absolutePath)
+                    prepare()
+                    start()
+                    isPlaying = true
+                    setOnCompletionListener {
+                        it.reset()
+                        isPlaying = false
+                        mediaPlayer = null
+                    }
+                }
+            } else {
+                mediaPlayer?.start()
+                isPlaying = true
+            }
+        } catch (e: IOException) {
+            Toast.makeText(context, "Failed to play audio", Toast.LENGTH_SHORT).show()
+            Log.e("VoiceMessageBubble", "Error playing audio: ${e.message}")
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
+            .padding(vertical = 4.dp)
+            .background(backgroundColor, shape)
+            .padding(8.dp)
+            .clickable { playAudio() }
     ) {
-        Card(
-            shape = shape,
-            elevation = CardDefaults.cardElevation(4.dp),
-            colors = CardDefaults.cardColors(containerColor = backgroundColor)
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                if (!isSentByUser) {
-                    Text(
-                        text = sender,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Gray,
-                        fontSize = 12.sp,
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Button(onClick = {
-                    // Provide feedback to the user
-                    val decodedBytes = Base64.decode(audioData, Base64.DEFAULT)
-                    playAudioFromByteArray(decodedBytes)
-                }) {
-                    Text(
-                        text = "Play Voice Message",
-                        color = textColor,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        }
+        Text(
+            text = if (isPlaying) "Playing audio..." else "$sender sent a voice message",
+            color = textColor,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.CenterStart)
+        )
     }
 }
+
+
 
 
 private fun playAudioFromByteArray(audioBytes: ByteArray) {
@@ -521,8 +537,8 @@ class WebSocketClient(private val scope: CoroutineScope) {
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 scope.launch(Dispatchers.Main) {
-                    println("Received message: $text")  // Log received message
-                    onMessageReceived(text) // Notify the composable of the received message
+                    println("Received message: $text")
+                    onMessageReceived(text)
                 }
             }
 
