@@ -271,7 +271,6 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
     }
 }
 
-
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
@@ -287,7 +286,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 val sender = json.optString("sender", "Unknown")
 
                 if (json.has("voice_data")) {
-                    val voiceData = json.optString("voice_data", "")
+                    val voiceData = json.optString("voice_data", "Unknown")
                     messages.add(sender to voiceData)
                 } else {
                     val messageText = json.optString("message", "No message content")
@@ -316,7 +315,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages) { (sender, msg) ->
-                    if (msg.startsWith("/9j/")) {
+                    if (msg.startsWith("/9j/")) {  // Check if it's audio data
                         VoiceMessageBubble(
                             sender = sender,
                             audioData = msg,
@@ -352,7 +351,6 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                     ),
                     singleLine = true
                 )
-
                 IconButton(onClick = {
                     if (message.isNotEmpty()) {
                         val jsonMessage = JSONObject().apply {
@@ -360,9 +358,12 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                             put("sender", username)
                         }
 
+                        Log.i("WebSocketChatUI", "Sending message: ${jsonMessage.toString()}")
                         webSocketClient.sendMessage(jsonMessage.toString())
                         messages.add(username to message)
                         message = ""
+                    } else {
+                        Log.w("WebSocketChatUI", "Attempted to send an empty message")
                     }
                 }) {
                     Icon(
@@ -373,6 +374,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 }
             }
 
+
             VoiceRecordingButton { recordedFile ->
                 val audioBytes = recordedFile.readBytes()
                 val base64Audio = Base64.encodeToString(audioBytes, Base64.DEFAULT)
@@ -381,11 +383,13 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                     put("sender", username)
                 }
 
+                Log.i("WebSocketChatUI", "Sending voice data: $base64Audio")
                 webSocketClient.sendMessage(jsonMessage.toString())
             }
         }
     }
 }
+
 
 @Composable
 fun VoiceMessageBubble(sender: String, audioData: String, isSentByUser: Boolean) {
@@ -445,10 +449,9 @@ fun VoiceMessageBubble(sender: String, audioData: String, isSentByUser: Boolean)
 }
 
 
-
-
 private fun playAudioFromByteArray(audioBytes: ByteArray) {
-    val tempFile = File.createTempFile("audio", ".3gp", Environment.getExternalStorageDirectory())
+    val tempFile =
+        File.createTempFile("audio", ".3gp", Environment.getExternalStorageDirectory())
     try {
         tempFile.writeBytes(audioBytes)
         val mediaPlayer = MediaPlayer()
