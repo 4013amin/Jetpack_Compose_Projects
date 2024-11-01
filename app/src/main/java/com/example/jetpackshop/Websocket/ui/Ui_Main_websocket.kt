@@ -3,6 +3,7 @@ package com.example.jetpackshop.Websocket.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
@@ -56,7 +57,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 
@@ -271,6 +274,28 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
     }
 }
 
+
+@Composable
+fun ImageUploadButton(username: String, onImageUploaded: (String) -> Unit) {
+    val context = LocalContext.current
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                val inputStream: InputStream? = context.contentResolver.openInputStream(it)
+                val imageBytes = inputStream?.readBytes()
+                val base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT)
+                onImageUploaded(base64Image)
+            }
+        }
+
+    Button(onClick = {
+        launcher.launch("image/*")
+    }) {
+        Text("ارسال عکس")
+    }
+}
+
+
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
@@ -279,15 +304,15 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val webSocketClient = remember { WebSocketClient(scope) }
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.75.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.102.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
                 val sender = json.optString("sender", "Unknown")
 
-                if (json.has("voice_data")) {
-                    val voiceData = json.optString("voice_data", "Unknown")
-                    messages.add(sender to voiceData)
+                if (json.has("image_data")) {
+                    val imageData = json.optString("image_data", "Unknown")
+                    messages.add(sender to imageData)
                 } else {
                     val messageText = json.optString("message", "No message content")
                     messages.add(sender to messageText)
@@ -315,10 +340,10 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages) { (sender, msg) ->
-                    if (msg.startsWith("/9j/")) {  // Check if it's audio data
-                        VoiceMessageBubble(
+                    if (msg.startsWith("/9j/")) {
+                        ImageMessageBubble(
                             sender = sender,
-                            audioData = msg,
+                            imageData = msg,
                             isSentByUser = sender == username
                         )
                     } else {
@@ -357,13 +382,9 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                             put("message", message)
                             put("sender", username)
                         }
-
-                        Log.i("WebSocketChatUI", "Sending message: ${jsonMessage.toString()}")
                         webSocketClient.sendMessage(jsonMessage.toString())
                         messages.add(username to message)
                         message = ""
-                    } else {
-                        Log.w("WebSocketChatUI", "Attempted to send an empty message")
                     }
                 }) {
                     Icon(
@@ -374,18 +395,50 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                 }
             }
 
-
-            VoiceRecordingButton { recordedFile ->
-                val audioBytes = recordedFile.readBytes()
-                val base64Audio = Base64.encodeToString(audioBytes, Base64.DEFAULT)
+            ImageUploadButton(username = username) { base64Image ->
                 val jsonMessage = JSONObject().apply {
-                    put("voice_data", base64Audio)
+                    put("image_data", base64Image)
                     put("sender", username)
                 }
-
-                Log.i("WebSocketChatUI", "Sending voice data: $base64Audio")
                 webSocketClient.sendMessage(jsonMessage.toString())
             }
+        }
+    }
+}
+
+@Composable
+fun ImageMessageBubble(sender: String, imageData: String, isSentByUser: Boolean) {
+    val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
+    val alignment = if (isSentByUser) Alignment.End else Alignment.Start
+    val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
+    else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
+
+
+    val decodedImageBytes = Base64.decode(imageData, Base64.DEFAULT)
+    val bitmap = BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.size)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .background(backgroundColor, shape = shape),
+        horizontalArrangement = if (isSentByUser) Arrangement.End else Arrangement.Start
+    ) {
+        Column(
+            horizontalAlignment = alignment,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(
+                text = sender,
+                fontWeight = FontWeight.Bold,
+                color = if (isSentByUser) Color.White else Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Sent Image",
+                modifier = Modifier.size(120.dp)
+            )
         }
     }
 }
