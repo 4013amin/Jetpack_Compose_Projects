@@ -3,6 +3,7 @@ package com.example.jetpackshop.Websocket.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.media.MediaRecorder
@@ -71,6 +72,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 
@@ -278,23 +280,53 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
 }
 
 
+fun compressAndConvertToBase64(bitmap: Bitmap, quality: Int = 50): String {
+    val outputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+    val byteArray = outputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+}
+
+
 @Composable
-fun ImageUploadButton(username: String, onImageUploaded: (String) -> Unit) {
+fun ImageUploadButton(username: String, onImageUpload: (String) -> Unit) {
     val context = LocalContext.current
+    var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    // پیکربندی لانچر برای دریافت تصویر از گالری
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
                 val inputStream: InputStream? = context.contentResolver.openInputStream(it)
-                val imageBytes = inputStream?.readBytes()
-                val base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT)
-                onImageUploaded(base64Image)
+                selectedImageBitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
             }
         }
 
-    Button(onClick = {
-        launcher.launch("image/*")
-    }) {
-        Text("ارسال عکس")
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Button(onClick = {
+            // باز کردن گالری
+            launcher.launch("image/*")
+        }) {
+            Text("Select Image")
+        }
+
+        // نمایش تصویر انتخاب شده، اگر وجود داشته باشد
+        selectedImageBitmap?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Selected Image",
+                modifier = Modifier.size(100.dp)
+            )
+
+            Button(onClick = {
+                // فشرده‌سازی و تبدیل به Base64
+                val base64Image = compressAndConvertToBase64(bitmap, quality = 50)
+                onImageUpload(base64Image)
+            }) {
+                Text("Upload Image")
+            }
+        }
     }
 }
 
@@ -363,13 +395,12 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val focusManager = LocalFocusManager.current
 
-
                 TextField(
                     value = message,
                     onValueChange = { message = it },
                     placeholder = { Text("پیام خود را وارد کنید...") },
                     keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Default,
+                        imeAction = ImeAction.Default, // اینجا به جای Send از Default استفاده می‌کنیم
                         capitalization = KeyboardCapitalization.None,
                         keyboardType = KeyboardType.Text
                     ),
@@ -419,38 +450,21 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
 
 @Composable
 fun ImageMessageBubble(sender: String, imageData: String, isSentByUser: Boolean) {
-    val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
-    val alignment = if (isSentByUser) Alignment.End else Alignment.Start
-    val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
-    else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
+    val decodedBytes = Base64.decode(imageData, Base64.DEFAULT)
+    val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
 
-
-    val decodedImageBytes = Base64.decode(imageData, Base64.DEFAULT)
-    val bitmap = BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.size)
-
-    Row(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .background(backgroundColor, shape = shape),
-        horizontalArrangement = if (isSentByUser) Arrangement.End else Arrangement.Start
+            .padding(8.dp)
+            .background(if (isSentByUser) Color.Blue else Color.Gray, RoundedCornerShape(8.dp))
     ) {
-        Column(
-            horizontalAlignment = alignment,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text(
-                text = sender,
-                fontWeight = FontWeight.Bold,
-                color = if (isSentByUser) Color.White else Color.Black
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Sent Image",
-                modifier = Modifier.size(120.dp)
-            )
-        }
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier
+                .size(200.dp) // Adjust size as needed
+                .clickable { /* Handle image click, e.g., open in fullscreen */ }
+        )
     }
 }
 
