@@ -59,7 +59,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 
@@ -296,6 +299,7 @@ fun ImageUploadButton(username: String, onImageUploaded: (String) -> Unit) {
 }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun WebSocketChatUI(username: String, roomName: String, navController: NavController) {
     var message by remember { mutableStateOf("") }
@@ -357,12 +361,15 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val focusManager = LocalFocusManager.current
+
+
                 TextField(
                     value = message,
                     onValueChange = { message = it },
                     placeholder = { Text("پیام خود را وارد کنید...") },
                     keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Send,
+                        imeAction = ImeAction.Default,
                         capitalization = KeyboardCapitalization.None,
                         keyboardType = KeyboardType.Text
                     ),
@@ -376,6 +383,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                     ),
                     singleLine = true
                 )
+
                 IconButton(onClick = {
                     if (message.isNotEmpty()) {
                         val jsonMessage = JSONObject().apply {
@@ -385,6 +393,9 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                         webSocketClient.sendMessage(jsonMessage.toString())
                         messages.add(username to message)
                         message = ""
+                        // اینجا فوکوس را مجدداً تنظیم می‌کنیم تا کیبورد در حالت فارسی بماند
+                        focusManager.clearFocus()
+                        focusManager.moveFocus(FocusDirection.Enter) // یا دوباره به TextField فوکوس می‌دهیم
                     }
                 }) {
                     Icon(
