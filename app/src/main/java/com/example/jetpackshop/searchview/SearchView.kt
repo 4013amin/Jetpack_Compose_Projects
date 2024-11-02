@@ -85,7 +85,7 @@ fun SearchField(searchText: String, onSearchTextChanged: (String) -> Unit) {
                 style = MaterialTheme.typography.labelMedium.copy(color = Color.Black)
             )
         },
-        colors = TextFieldDefaults.textFieldColors(Color.Black),
+//        colors = TextFieldDefaults.textFieldColors(Color.Black),
         textStyle = MaterialTheme.typography.bodyLarge
     )
 }

@@ -1,3 +1,4 @@
+// settings.gradle
 pluginManagement {
     repositories {
         mavenCentral()
@@ -12,7 +13,7 @@ dependencyResolutionManagement {
         mavenCentral()
         google()
         maven {
-            url = uri("https://webrtc.github.io/repo/m2")
+            url = uri("https://webrtc.github.io/repo/m2") // WebRTC repository
         }
     }
 }
