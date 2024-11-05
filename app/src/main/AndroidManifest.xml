@@ -28,7 +28,9 @@
         android:theme="@style/Theme.JetPackShop"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-
+        <activity
+            android:name="com.example.chatApp.ui.ChatAppMain"
+            android:exported="false" />
         <!-- Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -39,14 +41,10 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Register the NotificationReceiver -->
-        <receiver
-            android:name="NotificationReceiver"
-            android:exported="true" />
+        </activity> <!-- Register the NotificationReceiver -->
 
     </application>
 
