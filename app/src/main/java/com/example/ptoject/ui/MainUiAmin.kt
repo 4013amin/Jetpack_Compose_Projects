@@ -22,6 +22,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import com.example.jetpackshop.shop.Screen_Form
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import com.example.ptoject.ui.ShowScaffold
-import com.itextpdf.layout.element.Text
 
 class MainUiAmin : androidx.activity.ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

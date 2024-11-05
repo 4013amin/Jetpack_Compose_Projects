@@ -8,9 +8,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jetpackshop.Tamrini.data.models.Models_TamriniItem
 import com.example.jetpackshop.Tamrini.data.utils.retrofit_Inter
-import com.itextpdf.io.exceptions.IOException
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import java.io.IOException
 
 class ViewModelsTamrini(application: Application) : AndroidViewModel(application) {
 

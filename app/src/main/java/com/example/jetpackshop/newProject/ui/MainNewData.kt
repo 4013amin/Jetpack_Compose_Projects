@@ -68,7 +68,6 @@ import com.example.jetpackshop.navigations.nav
 import com.example.jetpackshop.newProject.data.Models.Fields
 import com.example.jetpackshop.newProject.viewModel.ViewModelNew
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
-import com.itextpdf.layout.element.Text
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody

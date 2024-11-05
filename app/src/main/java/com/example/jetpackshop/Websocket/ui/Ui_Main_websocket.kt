@@ -340,7 +340,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val webSocketClient = remember { WebSocketClient(scope) }
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.102.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.136.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
