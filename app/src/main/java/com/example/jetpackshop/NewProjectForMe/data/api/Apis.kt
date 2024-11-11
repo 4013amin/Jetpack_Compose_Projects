@@ -9,17 +9,14 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 
 interface Apis {
-    @Multipart
-    @POST("app/sendData/")
-    suspend fun SendDataForMe(
+
+    @POST("api/")
+    suspend fun sendData(
         @Part image: MultipartBody.Part,
         @Part("username") username: String,
         @Part("password") password: String
     ): Response<ModelsDataForMe>
 
-
-    @GET("/app/getData")
-    suspend fun getData(
-
-    ): Response<List<ModelsDataForMe>>
+    @GET("api/")
+    suspend fun getData(): Response<List<ModelsDataForMe>>
 }

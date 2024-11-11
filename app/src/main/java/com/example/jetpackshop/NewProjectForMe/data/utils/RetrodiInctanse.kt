@@ -7,25 +7,14 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrodiInctanse {
+    const val BaseUrl = "http://"
 
-    const val bas = "http://192.168.149.101:2020/"
-
-    val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-
-    val client = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .build()
-
-    val api: Apis by lazy {
+    val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(bas)
-            .client(client)
+            .baseUrl(BaseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(Apis::class.java)
     }
-
 
 }

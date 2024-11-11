@@ -1,58 +1,62 @@
 package com.example.jetpackshop.NewProjectForMe.ViewModel
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import coil.network.HttpException
 import com.example.jetpackshop.NewProjectForMe.data.models.ModelsDataForMe
 import com.example.jetpackshop.NewProjectForMe.data.utils.RetrodiInctanse
 import com.example.jetpackshop.newProject.data.Models.Fields
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
+import java.io.IOException
 
 class ViewModel(application: Application) : AndroidViewModel(application) {
+    val data = mutableStateOf<List<ModelsDataForMe>>(arrayListOf())
 
-    var data = mutableStateOf<List<ModelsDataForMe>>(arrayListOf())
-    var number = mutableStateOf(0)
 
-    fun sendData(image: MultipartBody.Part, username: String, password: String) {
+    fun senData(
+        image: MultipartBody.Part,
+        username: String,
+        password: String
+    ) {
         viewModelScope.launch {
             val response = try {
-                RetrodiInctanse.api.SendDataForMe(image, username, password)
+                RetrodiInctanse.retrofit.sendData(image, username, password)
             } catch (e: Exception) {
-                Log.e("Error", "Exception occurred: ${e.message}", e)
+                Log.e("Error", e.toString())
                 return@launch
             }
-
-
             if (response.isSuccessful && response.body() != null) {
                 data.value = arrayListOf(response.body()!!)
-                Log.d("Response", response.body().toString())
             }
         }
-
     }
 
-    fun getData() {
-        viewModelScope.launch(Dispatchers.IO) {
+    fun getData(context: Context) {
+        viewModelScope.launch {
             val response = try {
-                RetrodiInctanse.api.getData()
-            }catch (e: Exception) {
-                Log.e("Error", "Exception occurred: ${e.message}", e)
+                RetrodiInctanse.retrofit.getData()
+            } catch (e: IOException) {
+                Toast.makeText(context, "this is error in Io ", Toast.LENGTH_SHORT).show()
                 return@launch
+            } catch (e: HttpException) {
+                Toast.makeText(context, "this is error in HttpException ", Toast.LENGTH_SHORT)
+                    .show()
+                return@launch
+
             }
 
-            if (response.isSuccessful && response.body() != null){
+            if (response.isSuccessful && response.body() != null) {
                 data.value = response.body()!!
             }
+
         }
     }
-
-
-    fun AddNumber() {
-        number.value += 1
-    }
-
 }
