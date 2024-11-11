@@ -13,10 +13,10 @@ interface Apis {
 
     @POST("")
     suspend fun addUsers(
-        @Part("username") username: RequestBody,
-        @Part("password") password: RequestBody,
+        @Part("username") username: String,
+        @Part("password") password: String,
         @Part image: MultipartBody.Part
-    )
+    ): Response<List<ModelsDataForMe>>
 
     @GET("")
     suspend fun getData(): Response<List<ModelsDataForMe>>
