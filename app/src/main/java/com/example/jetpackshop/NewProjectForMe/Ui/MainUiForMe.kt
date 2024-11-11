@@ -119,7 +119,7 @@ fun UserForm(viewModel: ViewModel = viewModel()) {
                 val file = getFileFromUri(uri, context)
                 val imagePart =
                     MultipartBody.Part.createFormData("image", file.name, file.asRequestBody())
-                viewModel.sendData(imagePart, username, password)
+                viewModel.senData(imagePart, username, password)
             }
         }) {
             Text("Submit")
@@ -209,4 +209,3 @@ fun ImageLoader(imageUrl: String, modifier: Modifier = Modifier) {
         contentScale = ContentScale.Crop
     )
 }
-
