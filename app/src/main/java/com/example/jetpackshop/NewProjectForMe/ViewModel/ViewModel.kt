@@ -33,7 +33,6 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             if (response.isSuccessful && response.body() != null) {
-                da.
             }
 
         }
