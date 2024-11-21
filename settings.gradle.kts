@@ -10,13 +10,11 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        google() // این مخزن شامل aapt2 است.
         mavenCentral()
-        google()
-        maven {
-            url = uri("https://webrtc.github.io/repo/m2") // WebRTC repository
-        }
     }
 }
+
 
 rootProject.name = "JetPackShop"
 include(":app")
