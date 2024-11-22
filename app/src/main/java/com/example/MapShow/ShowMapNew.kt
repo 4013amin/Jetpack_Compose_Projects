@@ -19,16 +19,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.jetpackshop.R
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
-import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import kotlin.math.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import androidx.compose.ui.res.painterResource
 
 class ShowMapNew : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +44,7 @@ class ShowMapNew : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MapScreen()
+                    UberStyleMapScreen()
                 }
             }
         }
@@ -47,49 +52,40 @@ class ShowMapNew : ComponentActivity() {
 }
 
 @Composable
-fun MapScreen() {
+fun UberStyleMapScreen() {
     val context = LocalContext.current
     var hasLocationPermission by remember { mutableStateOf(false) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
-    var destination by remember { mutableStateOf<LatLng?>(null) }
-    var estimatedPrice by remember { mutableStateOf<Double?>(null) }
-    var isPriceCalculated by remember { mutableStateOf(false) }
+    val mapView = remember { MapView(context) }
 
+    // Permission launcher for location
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        hasLocationPermission = isGranted
+        if (isGranted) {
+            hasLocationPermission = true
+        } else {
+            Toast.makeText(context, "Location permission denied!", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    // درخواست مجوز دسترسی به موقعیت مکانی
+    // Check for permission and request if not granted
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) -> {
-                hasLocationPermission = true
-                getUserLocation(context) { location ->
-                    currentLocation = location
-                }
-            }
+            ) -> hasLocationPermission = true
 
-            else -> {
-                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-            }
+            else -> permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
-    // نمایش نقشه در صورتی که مجوز صادر شده باشد
     if (hasLocationPermission) {
-        val mapView = remember { MapView(context) }
-
-        // مدیریت چرخه‌ی حیات MapView
         DisposableEffect(Unit) {
             mapView.onCreate(null)
             mapView.onStart()
             mapView.onResume()
-
             onDispose {
                 mapView.onPause()
                 mapView.onStop()
@@ -98,124 +94,129 @@ fun MapScreen() {
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // نمایش قیمت تخمینی در صورت محاسبه
-            if (isPriceCalculated && estimatedPrice != null) {
-                Text(text = "Estimated Price: ${estimatedPrice?.toInt()} تومان", modifier = Modifier.padding(16.dp))
+            // Display Map
+            AndroidView(factory = { mapView }, modifier = Modifier.weight(1f)) { map ->
+                map.getMapAsync { googleMap ->
+                    // Start live location updates
+                    startUberLocationUpdates(context) { location ->
+                        currentLocation = location
+                        googleMap.clear() // Clear old markers
+
+                        // Add marker at the current location with custom icon
+                        googleMap.addMarker(
+                            MarkerOptions()
+                                .position(location)
+                                .title("Your Location")
+                                .icon(
+                                    BitmapDescriptorFactory.fromBitmap(
+                                        getBitmapFromDrawable(
+                                            context,
+                                            R.drawable.baseline_person_24
+                                        )
+                                    )
+                                ) // Replace with your drawable
+                        )
+
+                        // Move camera to the current location
+                        googleMap.moveCamera(
+                            CameraUpdateFactory.newLatLngZoom(location, 15f)
+                        )
+                    }
+                }
             }
 
-            // دکمه محاسبه قیمت
+            // Button to Center Map on Current Location
             Button(
                 onClick = {
-                    currentLocation?.let { origin ->
-                        destination?.let { dest ->
-                            // محاسبه قیمت
-                            estimatedPrice = calculatePrice(origin, dest)
-                            isPriceCalculated = true
-                            // لاگ برای بررسی مقادیر
-                            println("Price Calculated: $estimatedPrice")
-                        } ?: run {
-                            Toast.makeText(context, "Please select a destination", Toast.LENGTH_SHORT).show()
+                    currentLocation?.let { location ->
+                        mapView.getMapAsync { googleMap ->
+                            googleMap.moveCamera(
+                                CameraUpdateFactory.newLatLngZoom(location, 15f)
+                            )
                         }
                     }
                 },
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                Text(text = "Calculate Price")
+                Text(text = "Center Map on Current Location")
             }
-
-            if (isPriceCalculated && estimatedPrice != null) {
-                Text(
-                    text = "Estimated Price: ${estimatedPrice?.toInt()} تومان",
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
-                Text(
-                    text = "Price not calculated yet.",
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-
-            // نمایش نقشه
-            AndroidView(factory = {
-                mapView.apply {
-                    getMapAsync(OnMapReadyCallback { googleMap ->
-                        // تنظیمات اولیه نقشه
-                        val defaultLocation = LatLng(35.6892, 51.3890)
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 10f))
-                        googleMap.addMarker(
-                            MarkerOptions()
-                                .position(defaultLocation)
-                                .title("Tehran")
-                        )
-                        googleMap.uiSettings.isZoomControlsEnabled = true
-
-                        // فعال‌سازی موقعیت مکانی اگر مجوز صادر شده باشد
-                        if (ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            googleMap.isMyLocationEnabled = true
-                        }
-
-                        // مدیریت انتخاب مقصد
-                        googleMap.setOnMapClickListener { latLng ->
-                            destination = latLng
-                            googleMap.clear()  // پاک کردن نشانگرهای قبلی
-                            googleMap.addMarker(MarkerOptions().position(latLng).title("Destination"))
-                        }
-                    })
-                }
-            }, modifier = Modifier.fillMaxSize())
         }
     } else {
-        // نمایش پیام در صورت عدم صدور مجوز
-        Text(text = "Location permission is required to display the map.")
+        Text(
+            text = "Location permission is required to display the map.",
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
-// فرمول هارورد برای محاسبه فاصله بین دو نقطه جغرافیایی
+
+@SuppressLint("MissingPermission")
+fun startUberLocationUpdates(
+    context: Context,
+    onLocationUpdated: (LatLng) -> Unit
+) {
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+        Priority.PRIORITY_HIGH_ACCURACY,
+        2000L // Update every 2 seconds
+    ).build()
+
+    val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+        override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+            locationResult.locations.lastOrNull()?.let { location ->
+                val latLng = LatLng(location.latitude, location.longitude)
+                onLocationUpdated(latLng)
+            }
+        }
+    }
+
+    // Start location updates
+    fusedLocationClient.requestLocationUpdates(
+        locationRequest,
+        locationCallback,
+        context.mainLooper
+    )
+}
+
+fun getBitmapFromDrawable(context: Context, drawableId: Int): Bitmap {
+    val drawable = ContextCompat.getDrawable(context, drawableId)
+        ?: return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    val bitmap = Bitmap.createBitmap(
+        drawable.intrinsicWidth,
+        drawable.intrinsicHeight,
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
+}
+
 fun calculateDistance(from: LatLng, to: LatLng): Double {
-    val radius = 6371  // Earth's radius in km
+    val radius = 6371.0 // Earth's radius in km
     val latDiff = Math.toRadians(to.latitude - from.latitude)
     val lngDiff = Math.toRadians(to.longitude - from.longitude)
 
-    val a = Math.sin(latDiff / 2) * Math.sin(latDiff / 2) +
-            Math.cos(Math.toRadians(from.latitude)) * Math.cos(Math.toRadians(to.latitude)) *
-            Math.sin(lngDiff / 2) * Math.sin(lngDiff / 2)
-    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    val a = sin(latDiff / 2).pow(2) +
+            cos(Math.toRadians(from.latitude)) * cos(Math.toRadians(to.latitude)) *
+            sin(lngDiff / 2).pow(2)
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
-    return radius * c  // Distance in km
+    return radius * c
 }
 
-// محاسبه قیمت
 fun calculatePrice(origin: LatLng, destination: LatLng): Double {
     val distance = calculateDistance(origin, destination)
-    val pricePerKm = 10.0  // Price per km (in Toman)
+    val pricePerKm = 10.0 // Price per km (in Toman)
     return distance * pricePerKm
-}
-
-// گرفتن موقعیت کاربر
-@SuppressLint("MissingPermission")
-fun getUserLocation(context: Context, onLocationReceived: (LatLng?) -> Unit) {
-    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
-    if (ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    ) {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            location?.let {
-                val latLng = LatLng(it.latitude, it.longitude)
-                onLocationReceived(latLng)
-            }
-        }
-    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ShowMapPreview() {
-    MapScreen()
+    JetPackShopTheme {
+        UberStyleMapScreen()
+    }
 }
