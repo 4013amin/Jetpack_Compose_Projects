@@ -33,7 +33,9 @@ import kotlin.math.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.util.Log
 import androidx.compose.ui.res.painterResource
+import java.io.IOException
 
 class ShowMapNew : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,20 +58,15 @@ fun UberStyleMapScreen() {
     val context = LocalContext.current
     var hasLocationPermission by remember { mutableStateOf(false) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+    var destinationLocation by remember { mutableStateOf<LatLng?>(null) }
     val mapView = remember { MapView(context) }
 
-    // Permission launcher for location
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            hasLocationPermission = true
-        } else {
-            Toast.makeText(context, "Location permission denied!", Toast.LENGTH_SHORT).show()
-        }
+        hasLocationPermission = isGranted
     }
 
-    // Check for permission and request if not granted
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(
@@ -94,27 +91,38 @@ fun UberStyleMapScreen() {
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Display Map
             AndroidView(factory = { mapView }, modifier = Modifier.weight(1f)) { map ->
                 map.getMapAsync { googleMap ->
+                    googleMap.setOnMapClickListener { latLng ->
+                        destinationLocation = latLng
+                        destinationLocation?.let { destination ->
+                            currentLocation?.let { origin ->
+                                // Fetch and draw route
+                                fetchAndDrawRoute(
+                                    context,
+                                    googleMap,
+                                    origin,
+                                    destination
+                                )
+                            }
+                        }
+                    }
+
                     // Start live location updates
                     startUberLocationUpdates(context) { location ->
                         currentLocation = location
-                        googleMap.clear() // Clear old markers
+                        googleMap.clear() // Clear old markers and polylines
 
-                        // Add marker at the current location with custom icon
+                        // Add marker at the current location
                         googleMap.addMarker(
                             MarkerOptions()
                                 .position(location)
                                 .title("Your Location")
                                 .icon(
                                     BitmapDescriptorFactory.fromBitmap(
-                                        getBitmapFromDrawable(
-                                            context,
-                                            R.drawable.baseline_person_24
-                                        )
+                                        getBitmapFromDrawable(context, R.drawable.baseline_person_24)
                                     )
-                                ) // Replace with your drawable
+                                )
                         )
 
                         // Move camera to the current location
@@ -124,24 +132,6 @@ fun UberStyleMapScreen() {
                     }
                 }
             }
-
-            // Button to Center Map on Current Location
-            Button(
-                onClick = {
-                    currentLocation?.let { location ->
-                        mapView.getMapAsync { googleMap ->
-                            googleMap.moveCamera(
-                                CameraUpdateFactory.newLatLngZoom(location, 15f)
-                            )
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(text = "Center Map on Current Location")
-            }
         }
     } else {
         Text(
@@ -150,6 +140,93 @@ fun UberStyleMapScreen() {
         )
     }
 }
+
+fun fetchAndDrawRoute(
+    context: Context,
+    googleMap: com.google.android.gms.maps.GoogleMap,
+    origin: LatLng,
+    destination: LatLng
+) {
+    val apiKey = "AIzaSyCE10md9NLiGzDpcciCJlnoUYkQdIz0YHE"
+    val url = "https://maps.googleapis.com/maps/api/directions/json?" +
+            "origin=${origin.latitude},${origin.longitude}" +
+            "&destination=${destination.latitude},${destination.longitude}" +
+            "&key=$apiKey"
+
+    val client = okhttp3.OkHttpClient()
+    val request = okhttp3.Request.Builder().url(url).build()
+
+    client.newCall(request).enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: okhttp3.Call, e: IOException) {
+            Toast.makeText(context, "Failed to fetch route: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+            if (response.isSuccessful) {
+                val responseData = response.body?.string()
+                responseData?.let {
+                    val polylinePoints = parsePolylinePoints(it)
+                    googleMap.addPolyline(
+                        com.google.android.gms.maps.model.PolylineOptions()
+                            .addAll(polylinePoints)
+                            .width(10f)
+                            .color(android.graphics.Color.BLUE)
+                    )
+                }
+            }
+        }
+    })
+}
+
+fun parsePolylinePoints(response: String): List<LatLng> {
+    val jsonObject = org.json.JSONObject(response)
+    val routes = jsonObject.getJSONArray("routes")
+    if (routes.length() == 0) {
+        Log.e("DirectionsAPI", "No routes found")
+        return emptyList<LatLng>()
+    }
+    val overviewPolyline = routes.getJSONObject(0)
+        .getJSONObject("overview_polyline")
+        .getString("points")
+    return decodePolyline(overviewPolyline)
+
+}
+
+fun decodePolyline(encoded: String): List<LatLng> {
+    val poly = ArrayList<LatLng>()
+    var index = 0
+    val len = encoded.length
+    var lat = 0
+    var lng = 0
+
+    while (index < len) {
+        var b: Int
+        var shift = 0
+        var result = 0
+        do {
+            b = encoded[index++].code - 63
+            result = result or (b and 0x1f shl shift)
+            shift += 5
+        } while (b >= 0x20)
+        val dLat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+        lat += dLat
+
+        shift = 0
+        result = 0
+        do {
+            b = encoded[index++].code - 63
+            result = result or (b and 0x1f shl shift)
+            shift += 5
+        } while (b >= 0x20)
+        val dLng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+        lng += dLng
+
+        poly.add(LatLng(lat / 1E5, lng / 1E5))
+    }
+
+    return poly
+}
+
 
 
 @SuppressLint("MissingPermission")
