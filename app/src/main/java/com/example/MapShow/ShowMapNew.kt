@@ -151,6 +151,7 @@ fun fetchAndDrawRoute(
     val url = "https://maps.googleapis.com/maps/api/directions/json?" +
             "origin=${origin.latitude},${origin.longitude}" +
             "&destination=${destination.latitude},${destination.longitude}" +
+            "&mode=driving" + // حالت رانندگی
             "&key=$apiKey"
 
     val client = okhttp3.OkHttpClient()
@@ -165,10 +166,10 @@ fun fetchAndDrawRoute(
             if (response.isSuccessful) {
                 val responseData = response.body?.string()
                 responseData?.let {
-                    val polylinePoints = parsePolylinePoints(it)
+                    val routeSteps = parseRouteSteps(it) // گام‌های مسیر را دریافت کنید
                     googleMap.addPolyline(
                         com.google.android.gms.maps.model.PolylineOptions()
-                            .addAll(polylinePoints)
+                            .addAll(routeSteps)
                             .width(10f)
                             .color(android.graphics.Color.BLUE)
                     )
@@ -176,6 +177,34 @@ fun fetchAndDrawRoute(
             }
         }
     })
+}
+
+fun parseRouteSteps(response: String): List<LatLng> {
+    val jsonObject = org.json.JSONObject(response)
+    val routes = jsonObject.getJSONArray("routes")
+    if (routes.length() == 0) {
+        Log.e("DirectionsAPI", "No routes found")
+        return emptyList()
+    }
+
+    val steps = routes.getJSONObject(0)
+        .getJSONArray("legs")
+        .getJSONObject(0)
+        .getJSONArray("steps")
+
+    val routePoints = mutableListOf<LatLng>()
+    for (i in 0 until steps.length()) {
+        val step = steps.getJSONObject(i)
+        val startLat = step.getJSONObject("start_location").getDouble("lat")
+        val startLng = step.getJSONObject("start_location").getDouble("lng")
+        val endLat = step.getJSONObject("end_location").getDouble("lat")
+        val endLng = step.getJSONObject("end_location").getDouble("lng")
+
+        routePoints.add(LatLng(startLat, startLng))
+        routePoints.add(LatLng(endLat, endLng))
+    }
+
+    return routePoints
 }
 
 fun parsePolylinePoints(response: String): List<LatLng> {
