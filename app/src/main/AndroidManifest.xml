@@ -16,6 +16,11 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -35,7 +40,7 @@
             android:value="AIzaSyCE10md9NLiGzDpcciCJlnoUYkQdIz0YHE" />
 
         <activity
-            android:name=".ShowMap.ShowMapNew"
+            android:name=".Websocket.ui.MainUiWebsocket"
             android:exported="true"
             tools:ignore="MissingClass">
             <intent-filter>

@@ -47,6 +47,7 @@ class ShowMapNew : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     UberStyleMapScreen()
+
                 }
             }
         }
@@ -140,6 +141,9 @@ fun UberStyleMapScreen() {
         )
     }
 }
+
+
+
 
 fun fetchAndDrawRoute(
     context: Context,

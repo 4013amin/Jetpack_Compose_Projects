@@ -58,6 +58,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -72,15 +73,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 
 
-class MainUiWebsocket : ComponentActivity() {
+class MainUiWebsocket : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
 
         // Request necessary permissions
         val requestPermissionsLauncher =
@@ -113,6 +114,7 @@ fun MainNavigation(navController: NavController) {
         startDestination = "LoginScreen"
     ) {
         composable("LoginScreen") {
+            Authentication()
             ScreenLoginWithProfileImage(navController)
         }
         composable(
@@ -138,6 +140,55 @@ fun MainNavigation(navController: NavController) {
         }
     }
 }
+
+@Composable
+fun Authentication() {
+    // به دست آوردن Context و Activity
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
+    val navController = rememberNavController()
+
+    // وضعیت برای موفقیت در احراز هویت
+    var isAuthenticated by remember { mutableStateOf(false) }
+
+    // به محض اینکه صفحه ساخته شد، شروع به احراز هویت کنیم
+    LaunchedEffect(Unit) {
+        // اگر Activity معتبر باشد، احراز هویت بیومتریک را آغاز می‌کنیم
+        activity?.let {
+            val biometricPrompt = BiometricPrompt(
+                it, // استفاده از Activity برای بیومتریک
+                ContextCompat.getMainExecutor(context),
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        super.onAuthenticationSucceeded(result)
+                        // در صورت موفقیت احراز هویت، وضعیت را تغییر بده
+                        isAuthenticated = true
+                    }
+
+                    override fun onAuthenticationFailed() {
+                        super.onAuthenticationFailed()
+                        // در صورت شکست احراز هویت
+                        isAuthenticated = false
+                    }
+                }
+            )
+
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle("احراز هویت بیومتریک")
+                .setSubtitle("برای وارد شدن از اثر انگشت یا چهره استفاده کنید")
+                .setNegativeButtonText("لغو")
+                .build()
+
+            // شروع به احراز هویت بیومتریک
+            biometricPrompt.authenticate(promptInfo)
+        }
+    }
+    if (isAuthenticated) {
+        ScreenLoginWithProfileImage(navController)
+    }
+}
+
+
 
 @Composable
 fun LottieAnimationScreen() {
@@ -266,7 +317,11 @@ fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
                     }
                     isRecording = true
                 } catch (e: IOException) {
-                    Toast.makeText(context, "Recording failed: ${e.message}", Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        context,
+                        "Recording failed: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                 }
             }
