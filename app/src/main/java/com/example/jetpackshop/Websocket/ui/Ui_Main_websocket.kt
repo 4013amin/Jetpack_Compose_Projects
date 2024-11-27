@@ -76,6 +76,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jetpackshop.Websocket.ViewModel.VoiceChatViewModel
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -315,6 +317,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val messages = remember { mutableStateListOf<Pair<String, String>>() }
     val scope = rememberCoroutineScope()
     val webSocketClient = remember { WebSocketClient(scope) }
+    val viewModel: VoiceChatViewModel = viewModel()
 
     DisposableEffect(Unit) {
         val url = "ws://192.168.26.101:2020/ws/app/$roomName/$username/"
@@ -346,6 +349,8 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+
+
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -365,8 +370,6 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                             message = msg,
                             isSentByUser = sender == username,
                             onDeleteMessage = {
-                                // عمل حذف پیام یا هر عملیاتی که می‌خواهید
-                                println("پیام حذف شد")
                             })
                     }
                 }
@@ -462,8 +465,7 @@ fun MessageBubble(
     val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
     else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
 
-    val scope = rememberCoroutineScope()
-    val webSocketClient = remember { WebSocketClient(scope) }
+
     var showMenu by remember { mutableStateOf(false) }
 
     Box(
