@@ -61,9 +61,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -143,31 +145,25 @@ fun MainNavigation(navController: NavController) {
 
 @Composable
 fun Authentication() {
-    // به دست آوردن Context و Activity
     val context = LocalContext.current
     val activity = context as? FragmentActivity
     val navController = rememberNavController()
 
-    // وضعیت برای موفقیت در احراز هویت
     var isAuthenticated by remember { mutableStateOf(false) }
 
-    // به محض اینکه صفحه ساخته شد، شروع به احراز هویت کنیم
     LaunchedEffect(Unit) {
-        // اگر Activity معتبر باشد، احراز هویت بیومتریک را آغاز می‌کنیم
         activity?.let {
             val biometricPrompt = BiometricPrompt(
-                it, // استفاده از Activity برای بیومتریک
+                it,
                 ContextCompat.getMainExecutor(context),
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                         super.onAuthenticationSucceeded(result)
-                        // در صورت موفقیت احراز هویت، وضعیت را تغییر بده
                         isAuthenticated = true
                     }
 
                     override fun onAuthenticationFailed() {
                         super.onAuthenticationFailed()
-                        // در صورت شکست احراز هویت
                         isAuthenticated = false
                     }
                 }
@@ -179,7 +175,6 @@ fun Authentication() {
                 .setNegativeButtonText("لغو")
                 .build()
 
-            // شروع به احراز هویت بیومتریک
             biometricPrompt.authenticate(promptInfo)
         }
     }
@@ -187,7 +182,6 @@ fun Authentication() {
         ScreenLoginWithProfileImage(navController)
     }
 }
-
 
 
 @Composable
@@ -263,78 +257,6 @@ fun ScreenLoginWithProfileImage(navController: NavController) {
 }
 
 
-@Composable
-fun VoiceRecordingButton(onVoiceRecorded: (File) -> Unit) {
-    val context = LocalContext.current
-    var isRecording by remember { mutableStateOf(false) }
-    var mediaRecorder: MediaRecorder? = remember { null }
-    var audioFile: File? by remember { mutableStateOf(null) }
-    var showToast by remember { mutableStateOf("") }
-
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            showToast = "Permission to record audio is denied."
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
-    }
-
-    if (showToast.isNotEmpty()) {
-        Toast.makeText(context, showToast, Toast.LENGTH_SHORT).show()
-        showToast = ""
-    }
-
-    Button(
-        onClick = {
-            if (isRecording) {
-                mediaRecorder?.stop()
-                mediaRecorder?.release()
-                mediaRecorder = null
-                isRecording = false
-                audioFile?.let(onVoiceRecorded)
-            } else {
-                try {
-                    val fileName =
-                        "${context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)}/recording.3gp"
-                    audioFile = File(fileName)
-                    mediaRecorder = MediaRecorder().apply {
-                        setAudioSource(MediaRecorder.AudioSource.MIC)
-                        setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                        setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-                        setOutputFile(fileName)
-                        prepare()
-                        start()
-                    }
-                    isRecording = true
-                } catch (e: IOException) {
-                    Toast.makeText(
-                        context,
-                        "Recording failed: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }
-            }
-        },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isRecording) Color.Red else MaterialTheme.colorScheme.primary
-        )
-    ) {
-        Text(if (isRecording) "Stop Recording" else "Start Recording")
-    }
-}
-
-
 fun compressAndConvertToBase64(bitmap: Bitmap, quality: Int = 50): String {
     val outputStream = ByteArrayOutputStream()
     bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
@@ -395,7 +317,7 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
     val webSocketClient = remember { WebSocketClient(scope) }
 
     DisposableEffect(Unit) {
-        val url = "ws://192.168.2.101:2020/ws/app/$roomName/$username/"
+        val url = "ws://192.168.26.101:2020/ws/app/$roomName/$username/"
         webSocketClient.connectWebSocket(url) { receivedMessage ->
             try {
                 val json = JSONObject(receivedMessage)
@@ -441,8 +363,11 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                         MessageBubble(
                             sender = sender,
                             message = msg,
-                            isSentByUser = sender == username
-                        )
+                            isSentByUser = sender == username,
+                            onDeleteMessage = {
+                                // عمل حذف پیام یا هر عملیاتی که می‌خواهید
+                                println("پیام حذف شد")
+                            })
                     }
                 }
             }
@@ -467,8 +392,9 @@ fun WebSocketChatUI(username: String, roomName: String, navController: NavContro
                         fontSize = 16.sp,
                         textAlign = TextAlign.Right
                     ),
-                    singleLine = true
-                )
+                    singleLine = true,
+
+                    )
 
                 IconButton(onClick = {
                     if (message.isNotEmpty()) {
@@ -525,107 +451,20 @@ fun ImageMessageBubble(sender: String, imageData: String, isSentByUser: Boolean)
 
 
 @Composable
-fun VoiceMessageBubble(sender: String, audioData: String, isSentByUser: Boolean) {
+fun MessageBubble(
+    sender: String,
+    message: String,
+    isSentByUser: Boolean,
+    onDeleteMessage: () -> Unit
+) {
     val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
     val textColor = if (isSentByUser) Color.White else Color.Black
-    val alignment = if (isSentByUser) Alignment.End else Alignment.Start
     val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
     else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
 
-    val context = LocalContext.current
-    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-    var isPlaying by remember { mutableStateOf(false) }
-
-    val playAudio = {
-        try {
-            if (mediaPlayer == null) {
-                val decodedBytes = Base64.decode(audioData, Base64.DEFAULT)
-                val tempFile = File.createTempFile("tempAudio", "3gp", context.cacheDir).apply {
-                    writeBytes(decodedBytes)
-                }
-                mediaPlayer = MediaPlayer().apply {
-                    setDataSource(tempFile.absolutePath)
-                    prepare()
-                    start()
-                    isPlaying = true
-                    setOnCompletionListener {
-                        it.reset()
-                        isPlaying = false
-                        mediaPlayer = null
-                    }
-                }
-            } else {
-                mediaPlayer?.start()
-                isPlaying = true
-            }
-        } catch (e: IOException) {
-            Toast.makeText(context, "Failed to play audio", Toast.LENGTH_SHORT).show()
-            Log.e("VoiceMessageBubble", "Error playing audio: ${e.message}")
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .background(backgroundColor, shape)
-            .padding(8.dp)
-            .clickable { playAudio() }
-    ) {
-        Text(
-            text = if (isPlaying) "Playing audio..." else "$sender sent a voice message",
-            color = textColor,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.CenterStart)
-        )
-    }
-}
-
-
-private fun playAudioFromByteArray(audioBytes: ByteArray) {
-    val tempFile =
-        File.createTempFile("audio", ".3gp", Environment.getExternalStorageDirectory())
-    try {
-        tempFile.writeBytes(audioBytes)
-        val mediaPlayer = MediaPlayer()
-        mediaPlayer.setDataSource(tempFile.absolutePath)
-        mediaPlayer.prepare()
-        mediaPlayer.start()
-
-        mediaPlayer.setOnCompletionListener {
-            it.release() // Release the MediaPlayer once playback is complete
-            tempFile.delete() // Delete the temporary file after use
-        }
-    } catch (e: IOException) {
-        Log.e("AudioPlayback", "Error playing audio: ${e.message}")
-    }
-}
-
-
-fun handleFileSelection(context: Context, uri: Uri): String? {
-    return try {
-        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-        val fileBytes = inputStream?.readBytes()
-        inputStream?.close()  // Close the stream to avoid memory leaks
-        if (fileBytes != null && fileBytes.isNotEmpty()) {
-            Base64.encodeToString(fileBytes, Base64.DEFAULT)
-        } else {
-            println("File is empty or could not be read")
-            null
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
-
-@Composable
-fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
-    val backgroundColor = if (isSentByUser) Color(0xFF2196F3) else Color(0xFFE0E0E0)
-    val textColor = if (isSentByUser) Color.White else Color.Black
-    val alignment = if (isSentByUser) Alignment.End else Alignment.Start
-    val shape = if (isSentByUser) RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
-    else RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp)
+    val scope = rememberCoroutineScope()
+    val webSocketClient = remember { WebSocketClient(scope) }
+    var showMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -635,7 +474,15 @@ fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
         Card(
             shape = shape,
             elevation = CardDefaults.cardElevation(4.dp),
-            colors = CardDefaults.cardColors(containerColor = backgroundColor)
+            colors = CardDefaults.cardColors(containerColor = backgroundColor),
+            modifier = Modifier
+                .align(if (isSentByUser) Alignment.CenterEnd else Alignment.CenterStart)
+                .padding(8.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { showMenu = true }
+                    )
+                }
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 if (!isSentByUser) {
@@ -643,7 +490,7 @@ fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
                         text = sender,
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray,
-                        fontSize = 12.sp,
+                        fontSize = 12.sp
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
@@ -655,10 +502,23 @@ fun MessageBubble(sender: String, message: String, isSentByUser: Boolean) {
                 )
             }
         }
+
+        // DropdownMenu for options
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("حذف پیام") },
+                onClick = {
+                    onDeleteMessage()
+                    showMenu = false
+                }
+            )
+        }
     }
 }
 
-data class ChatMessage(val content: String, val isSentByUser: Boolean)
 
 class WebSocketClient(private val scope: CoroutineScope) {
     private var webSocket: WebSocket? = null

@@ -2,11 +2,18 @@ package com.example.jetpackshop.Websocket.ViewModel
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
 import android.media.*
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import coil.network.HttpException
+import com.example.jetpackshop.Websocket.data.utils.Ret
+import kotlinx.coroutines.launch
 import okhttp3.*
 import org.json.JSONObject
+import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -143,5 +150,21 @@ class VoiceChatViewModel(application: Application) : AndroidViewModel(applicatio
     fun disconnectVoiceChat() {
         webSocket.close(1000, "Call ended")
         stopVoiceStreaming()
+    }
+
+
+
+    fun deleteMassage(id : Int , context: Context){
+        viewModelScope.launch {
+            val response = try {
+                Ret.api.delete_data(id)
+            }catch (e : IOException){
+                Toast.makeText(context, "this is IO error ", Toast.LENGTH_SHORT).show()
+                return@launch
+            }catch (e : HttpException){
+                Toast.makeText(context, "this is http error", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+        }
     }
 }
