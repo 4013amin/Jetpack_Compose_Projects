@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,27 +33,29 @@ class question : FragmentActivity() {
 
 @Composable
 fun ShowQuestion() {
-    val randomNames = arrayOf("Amin", "Jafar", "Mamd", "Ahmad", "Niloofar")
-    val selectedName = remember { mutableStateOf("") }
+    val names = arrayListOf("Amin", "Armin", "mamd", "hoooooo")
+    val selected = remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(15.dp)
+            .padding(15.dp),
+        verticalArrangement = Arrangement.Center
     ) {
-        Button(onClick = {
-            selectedName.value = randomNames.random()
-        }) {
-            androidx.compose.material3.Text(text = "Click Here")
+        Button(onClick = { selected.value = names.random() }) {
+            Text(text = "Click here ..... ")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = if (selectedName.value.isNotEmpty())
-                "Selected Name: ${selectedName.value}"
-            else "No name selected yet",
-            modifier = Modifier.padding(8.dp)
-        )
+        Text(text = "Selected name: ${selected.value}", modifier = Modifier.padding(8.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            for (name in names) {
+                Text(text = "Name: $name", modifier = Modifier.padding(4.dp))
+            }
+        }
     }
 }
