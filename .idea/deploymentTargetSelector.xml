@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-11-01T12:29:07.588008839Z">
+        <DropdownSelection timestamp="2024-12-07T19:48:58.767647253Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=7ece8efa" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/home/delta/.android/avd/Amin_new.avd" />
             </handle>
           </Target>
         </DropdownSelection>
