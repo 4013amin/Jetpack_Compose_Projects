@@ -44,7 +44,7 @@
             android:value="AIzaSyCE10md9NLiGzDpcciCJlnoUYkQdIz0YHE" />
 
         <activity
-            android:name=".question.question"
+            android:name=".Websocket.ui.MainUiWebsocket"
             android:exported="true"
             tools:ignore="MissingClass">
             <intent-filter>
