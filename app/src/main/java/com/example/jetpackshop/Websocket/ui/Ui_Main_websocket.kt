@@ -284,13 +284,11 @@ fun ImageUploadButton(username: String, onImageUpload: (String) -> Unit) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Button(onClick = {
-            // باز کردن گالری
             launcher.launch("image/*")
         }) {
             Text("Select Image")
         }
 
-        // نمایش تصویر انتخاب شده، اگر وجود داشته باشد
         selectedImageBitmap?.let { bitmap ->
             Image(
                 bitmap = bitmap.asImageBitmap(),
