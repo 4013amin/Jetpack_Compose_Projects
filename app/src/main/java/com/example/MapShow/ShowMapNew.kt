@@ -33,8 +33,19 @@ import kotlin.math.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
 import android.util.Log
-import androidx.compose.ui.res.painterResource
+import android.view.Surface
+import androidx.compose.material3.MaterialTheme
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONObject
 import java.io.IOException
 
 class ShowMapNew : ComponentActivity() {
@@ -158,15 +169,15 @@ fun fetchAndDrawRoute(
             "&mode=driving" + // حالت رانندگی
             "&key=$apiKey"
 
-    val client = okhttp3.OkHttpClient()
-    val request = okhttp3.Request.Builder().url(url).build()
+    val client = OkHttpClient()
+    val request = Request.Builder().url(url).build()
 
-    client.newCall(request).enqueue(object : okhttp3.Callback {
-        override fun onFailure(call: okhttp3.Call, e: IOException) {
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
             Toast.makeText(context, "Failed to fetch route: ${e.message}", Toast.LENGTH_SHORT).show()
         }
 
-        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+        override fun onResponse(call: Call, response: Response) {
             if (response.isSuccessful) {
                 val responseData = response.body?.string()
                 responseData?.let {
@@ -175,7 +186,7 @@ fun fetchAndDrawRoute(
                         com.google.android.gms.maps.model.PolylineOptions()
                             .addAll(routeSteps)
                             .width(10f)
-                            .color(android.graphics.Color.BLUE)
+                            .color(Color.BLUE)
                     )
                 }
             }
@@ -184,7 +195,7 @@ fun fetchAndDrawRoute(
 }
 
 fun parseRouteSteps(response: String): List<LatLng> {
-    val jsonObject = org.json.JSONObject(response)
+    val jsonObject = JSONObject(response)
     val routes = jsonObject.getJSONArray("routes")
     if (routes.length() == 0) {
         Log.e("DirectionsAPI", "No routes found")
@@ -212,7 +223,7 @@ fun parseRouteSteps(response: String): List<LatLng> {
 }
 
 fun parsePolylinePoints(response: String): List<LatLng> {
-    val jsonObject = org.json.JSONObject(response)
+    val jsonObject = JSONObject(response)
     val routes = jsonObject.getJSONArray("routes")
     if (routes.length() == 0) {
         Log.e("DirectionsAPI", "No routes found")
@@ -268,13 +279,13 @@ fun startUberLocationUpdates(
     onLocationUpdated: (LatLng) -> Unit
 ) {
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+    val locationRequest = LocationRequest.Builder(
         Priority.PRIORITY_HIGH_ACCURACY,
         2000L // Update every 2 seconds
     ).build()
 
-    val locationCallback = object : com.google.android.gms.location.LocationCallback() {
-        override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+    val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
             locationResult.locations.lastOrNull()?.let { location ->
                 val latLng = LatLng(location.latitude, location.longitude)
                 onLocationUpdated(latLng)
