@@ -21,7 +21,8 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
 
-    <uses-permission android:name="android.permission.BIND_VPN_SERVICE"
+    <uses-permission
+        android:name="android.permission.BIND_VPN_SERVICE"
         tools:ignore="ProtectedPermissions" />
 
 
@@ -44,7 +45,7 @@
             android:value="AIzaSyCE10md9NLiGzDpcciCJlnoUYkQdIz0YHE" />
 
         <activity
-            android:name=".page.ui_Main"
+            android:name=".Websocket.ui.MainUiWebsocket"
             android:exported="true"
             tools:ignore="MissingClass">
             <intent-filter>
