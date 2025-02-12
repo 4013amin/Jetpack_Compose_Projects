@@ -63,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -75,6 +76,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import com.example.jetpackshop.R
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
+import com.google.api.Context
 
 class ui_Main : FragmentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -92,14 +94,16 @@ class ui_Main : FragmentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreviewMainPage() {
+    val context = LocalContext.current
+
     var ShowDialog by remember {
         mutableStateOf(false)
     }
     var username by remember {
-        mutableStateOf("")
+        mutableStateOf(PrefceManager.getUsername(context))
     }
     var password by remember {
-        mutableStateOf("")
+        mutableStateOf(PrefceManager.getpassword(context))
     }
     val scroller = rememberScrollState()
     var passwordVisible by remember {
@@ -107,8 +111,9 @@ fun PreviewMainPage() {
     }
 
     var isCheck by remember {
-        mutableStateOf(false)
+        mutableStateOf(PrefceManager.getIcheck(context))
     }
+
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -161,23 +166,23 @@ fun PreviewMainPage() {
             }
         },
 
-        content = {
+        content = { paddingValue ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(5.dp)
+                    .padding(paddingValue)
                     .background(color = Color.White)
                     .verticalScroll(scroller),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-//                Image(
-//                    painter = painterResource(id = R.drawable.banner_image),
-//                    contentDescription = null
-//                )
 
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { username = it },
+                    onValueChange = {
+                        username = it
+                        PrefceManager.saveUsername(context, it)
+                    },
                     modifier = Modifier.padding(15.dp),
                     placeholder = { Text(text = "Username") },
                     isError = true
@@ -185,7 +190,10 @@ fun PreviewMainPage() {
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        PrefceManager.savepassword(context, it)
+                    },
                     modifier = Modifier.padding(15.dp),
                     placeholder = { Text(text = "Password") },
                     isError = false,
@@ -228,7 +236,10 @@ fun PreviewMainPage() {
 
                 Switch(
                     checked = isCheck,
-                    onCheckedChange = { isCheck = it },
+                    onCheckedChange = {
+                        isCheck = it
+                        PrefceManager.saveIcheck(context, it)
+                    },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                     ),
