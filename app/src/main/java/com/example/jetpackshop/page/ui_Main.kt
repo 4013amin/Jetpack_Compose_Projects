@@ -2,6 +2,7 @@ package com.example.jetpackshop.page
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -181,7 +182,6 @@ fun PreviewMainPage() {
                     value = username,
                     onValueChange = {
                         username = it
-                        PrefceManager.saveUsername(context, it)
                     },
                     modifier = Modifier.padding(15.dp),
                     placeholder = { Text(text = "Username") },
@@ -192,7 +192,6 @@ fun PreviewMainPage() {
                     value = password,
                     onValueChange = {
                         password = it
-                        PrefceManager.savepassword(context, it)
                     },
                     modifier = Modifier.padding(15.dp),
                     placeholder = { Text(text = "Password") },
@@ -211,34 +210,12 @@ fun PreviewMainPage() {
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
-
-                Button(
-                    onClick = { /*TODO*/ },
-                    modifier = Modifier
-                        .width(300.dp)
-                        .padding(15.dp)
-                        .wrapContentHeight(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Green
-                    ),
-                    shape = RoundedCornerShape(5.dp)
-                ) {
-                    Text(
-                        text = "Submit",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
                 Spacer(modifier = Modifier.size(25.dp))
-
 
                 Switch(
                     checked = isCheck,
                     onCheckedChange = {
                         isCheck = it
-                        PrefceManager.saveIcheck(context, it)
                     },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
@@ -258,6 +235,32 @@ fun PreviewMainPage() {
                 Spacer(modifier = Modifier.size(25.dp))
 
                 Text(text = if (isCheck) "connected" else "disconnected")
+
+
+
+                Button(
+                    onClick = {
+                        PrefceManager.saveUsername(context, username)
+                        PrefceManager.savepassword(context, password)
+                        PrefceManager.saveIcheck(context, isCheck)
+                        Toast.makeText(context, "This save ok", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .width(300.dp)
+                        .padding(15.dp)
+                        .wrapContentHeight(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Green
+                    ),
+                    shape = RoundedCornerShape(5.dp)
+                ) {
+                    Text(
+                        text = "Submit",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
             }
         }
