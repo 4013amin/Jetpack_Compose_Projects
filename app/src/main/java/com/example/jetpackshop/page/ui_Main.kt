@@ -2,6 +2,8 @@ package com.example.jetpackshop.page
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -74,10 +76,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import com.example.jetpackshop.R
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
 import com.google.api.Context
+import kotlin.io.encoding.Base64
 
 class ui_Main : FragmentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -168,110 +172,119 @@ fun PreviewMainPage() {
         },
 
         content = { paddingValue ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(paddingValue)
-                    .background(color = Color.White)
-                    .verticalScroll(scroller),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = {
-                        username = it
-                    },
-                    modifier = Modifier.padding(15.dp),
-                    placeholder = { Text(text = "Username") },
-                    isError = true
-                )
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                    },
-                    modifier = Modifier.padding(15.dp),
-                    placeholder = { Text(text = "Password") },
-                    isError = false,
-                    singleLine = true,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        val image =
-                            if (passwordVisible) Icons.Filled.Person else Icons.Filled.ArrowDropDown
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = image,
-                                contentDescription = "Toggle Password Visibility"
-                            )
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
-                Spacer(modifier = Modifier.size(25.dp))
-
-                Switch(
-                    checked = isCheck,
-                    onCheckedChange = {
-                        isCheck = it
-                    },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                    ),
-                    modifier = Modifier.scale(2.5f),
-                    thumbContent = {
-                        if (isCheck) {
-                            Icon(
-                                Icons.Filled.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                            )
-                        }
+            AndroidView(
+                factory = { context ->
+                    WebView(context).apply {
+                        settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        webViewClient = WebViewClient()
+                        loadUrl("https://bustan.nus.ac.ir/Home/Index")
                     }
-                )
-
-                Spacer(modifier = Modifier.size(25.dp))
-
-                Text(text = if (isCheck) "connected" else "disconnected")
-
-
-
-                Button(
-                    onClick = {
-                        PrefceManager.saveUsername(context, username)
-                        PrefceManager.savepassword(context, password)
-                        PrefceManager.saveIcheck(context, isCheck)
-                        Toast.makeText(context, "This save ok", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier
-                        .width(300.dp)
-                        .padding(15.dp)
-                        .wrapContentHeight(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Green
-                    ),
-                    shape = RoundedCornerShape(5.dp)
-                ) {
-                    Text(
-                        text = "Submit",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-            }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValue)
+            )
         }
     )
 }
 
 
-@Composable
-fun ProductItem() {
-    // Add your product item composable if needed
-}
+//Column(
+//modifier = Modifier
+//.fillMaxWidth()
+//.padding(paddingValue)
+//.background(color = Color.White)
+//.verticalScroll(scroller),
+//horizontalAlignment = Alignment.CenterHorizontally,
+//verticalArrangement = Arrangement.Center
+//) {
+//
+//    OutlinedTextField(
+//        value = username,
+//        onValueChange = {
+//            username = it
+//        },
+//        modifier = Modifier.padding(15.dp),
+//        placeholder = { Text(text = "Username") },
+//        isError = true
+//    )
+//
+//    OutlinedTextField(
+//        value = password,
+//        onValueChange = {
+//            password = it
+//        },
+//        modifier = Modifier.padding(15.dp),
+//        placeholder = { Text(text = "Password") },
+//        isError = false,
+//        singleLine = true,
+//        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//        trailingIcon = {
+//            val image =
+//                if (passwordVisible) Icons.Filled.Person else Icons.Filled.ArrowDropDown
+//            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                Icon(
+//                    imageVector = image,
+//                    contentDescription = "Toggle Password Visibility"
+//                )
+//            }
+//        },
+//        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+//    )
+//    Spacer(modifier = Modifier.size(25.dp))
+//
+//    Switch(
+//        checked = isCheck,
+//        onCheckedChange = {
+//            isCheck = it
+//        },
+//        colors = SwitchDefaults.colors(
+//            checkedThumbColor = Color.White,
+//        ),
+//        modifier = Modifier.scale(2.5f),
+//        thumbContent = {
+//            if (isCheck) {
+//                Icon(
+//                    Icons.Filled.Check,
+//                    contentDescription = null,
+//                    modifier = Modifier.size(SwitchDefaults.IconSize),
+//                )
+//            }
+//        }
+//    )
+//
+//    Spacer(modifier = Modifier.size(25.dp))
+//
+//    Text(text = if (isCheck) "connected" else "disconnected")
+//
+//
+//
+//    Button(
+//        onClick = {
+//            PrefceManager.saveUsername(context, username)
+//            PrefceManager.savepassword(context, password)
+//            PrefceManager.saveIcheck(context, isCheck)
+//            Toast.makeText(context, "This save ok", Toast.LENGTH_SHORT).show()
+//        },
+//        modifier = Modifier
+//            .width(300.dp)
+//            .padding(15.dp)
+//            .wrapContentHeight(),
+//        colors = ButtonDefaults.buttonColors(
+//            containerColor = Color.Green
+//        ),
+//        shape = RoundedCornerShape(5.dp)
+//    ) {
+//        Text(
+//            text = "Submit",
+//            color = Color.White,
+//            fontSize = 16.sp,
+//            fontWeight = FontWeight.Bold
+//        )
+//    }
+//
+//}
 
 @ExperimentalMaterial3Api
 @Preview(showBackground = true)
