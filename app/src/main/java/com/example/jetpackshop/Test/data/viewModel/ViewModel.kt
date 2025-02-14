@@ -20,7 +20,7 @@ import java.io.File
 import java.io.IOException
 
 
-class ViewModel(application: Application) : AndroidViewModel(application) {
+open class ViewModel(application: Application) : AndroidViewModel(application) {
 
 
     var registerText = mutableStateOf("")
