@@ -13,7 +13,9 @@ data class RegisterResponse(
 )
 
 data class ProfileResponse(
-    val credit: Int,
-    val image: String
+    val credit: Float,
+    val image: String,
+    val gender: Int
 )
+
 

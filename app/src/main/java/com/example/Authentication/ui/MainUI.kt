@@ -7,7 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -32,13 +35,16 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +55,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
+import coil.compose.rememberImagePainter
+import com.example.Authentication.data.shared.SharedPrefers
 import com.example.Authentication.data.viewModel.viewModel
 import com.example.jetpackshop.R
 import com.example.jetpackshop.ui.theme.JetPackShopTheme
@@ -59,29 +69,48 @@ class MainUI : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             JetPackShopTheme {
-
+                NavigationSetup()
             }
         }
     }
 }
 
+
+@Composable
+fun NavigationSetup() {
+    val navController = androidx.navigation.compose.rememberNavController()
+
+    androidx.navigation.compose.NavHost(
+        navController = navController,
+        startDestination = "register"
+    ) {
+        composable("register") {
+            RegisterScreen(navController)
+        }
+        composable("profile") {
+            ProfileScreen()
+        }
+    }
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun RegisterScreen() {
-
+fun RegisterScreen(navController: NavHostController) {
+    val context = LocalContext.current
     val viewModel: viewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     var username by remember {
-        mutableStateOf("")
+        mutableStateOf(SharedPrefers.getUsername(context))
     }
 
     var password by remember {
-        mutableStateOf("")
+        mutableStateOf(SharedPrefers.getPassword(context))
     }
 
     var email by remember {
-        mutableStateOf("")
+        mutableStateOf(SharedPrefers.getEmail(context))
     }
     var credit by remember {
         mutableStateOf(0)
@@ -189,7 +218,24 @@ fun RegisterScreen() {
                 }
 
                 Button(
-                    onClick = { viewModel.register(username, password, email, credit, images) },
+                    onClick = {
+                        viewModel.register(
+                            context,
+                            username,
+                            password,
+                            email,
+                            credit,
+                            images
+                        )
+
+                        SharedPrefers.saveUsername(context, username)
+                        SharedPrefers.savePassword(context, password)
+                        SharedPrefers.saveEmail(context, email)
+
+
+                        navController.navigate("profile")
+
+                    },
                     modifier = Modifier
                         .width(200.dp)
                         .wrapContentHeight(),
@@ -211,14 +257,57 @@ fun RegisterScreen() {
 
         }
     )
-
-
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun ShowForm() {
-    RegisterScreen()
-}
+fun ProfileScreen(viewModel: viewModel = viewModel()) {
+    val profile = viewModel.profileResponse
 
+    LaunchedEffect(Unit) {
+        viewModel.getProfile()
+    }
+
+    if (profile != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // نمایش تصویر
+            Image(
+                painter = rememberImagePainter("YOUR_BASE_URL/${profile.image}"),
+                contentDescription = "Profile Image",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.Gray, CircleShape)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // نمایش اعتبار
+            Text(
+                text = "اعتبار: ${profile.credit}",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // نمایش جنسیت
+            val genderText = when (profile.gender) {
+                1 -> "مرد"
+                2 -> "خانم"
+                else -> "نامشخص"
+            }
+
+            Text(
+                text = "جنسیت: $genderText",
+                fontSize = 18.sp
+            )
+        }
+    }
+
+}
 

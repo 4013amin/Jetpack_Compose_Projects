@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 
 object PrefceManager {
 
-    private const val PREFS_NAME = "saved_products_prefs"
+    const val PREFS_NAME = "saved_products_prefs"
     private const val USERNAME_KEY = "username"
     private const val PASSWORD_KEY = "password"
     private const val IS_CHECK_KEY = "is_check"
