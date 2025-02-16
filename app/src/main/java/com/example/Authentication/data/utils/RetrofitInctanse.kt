@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitInctanse {
 
 
-    const val url = "http://192.168.1.110:2020/"
+    const val url = "http://192.168.1.101:2020/"
 
     val api: Api by lazy {
         Retrofit.Builder()

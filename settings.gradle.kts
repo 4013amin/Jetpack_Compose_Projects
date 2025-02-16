@@ -1,8 +1,8 @@
-// settings.gradle.kts
+// settings.gradle
 pluginManagement {
     repositories {
-        google()
         mavenCentral()
+        google()
         gradlePluginPortal()
     }
 }
@@ -10,11 +10,11 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
+        google() // این مخزن شامل aapt2 است.
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }
     }
 }
+
 
 rootProject.name = "JetPackShop"
 include(":app")

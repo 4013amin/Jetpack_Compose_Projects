@@ -311,3 +311,8 @@ fun ProfileScreen(viewModel: viewModel = viewModel()) {
 
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun showForm() {
+    NavigationSetup()
+}
