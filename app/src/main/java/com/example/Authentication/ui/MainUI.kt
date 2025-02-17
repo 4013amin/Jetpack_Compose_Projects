@@ -253,6 +253,29 @@ fun RegisterScreen(navController: NavHostController) {
 
                 }
 
+                Button(
+                    onClick = {
+
+                        navController.navigate("profile")
+
+                    },
+                    modifier = Modifier
+                        .width(200.dp)
+                        .wrapContentHeight(),
+                    shape = RoundedCornerShape(5.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Green
+                    )
+                ) {
+                    Text(
+                        text = "پروفایل ",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+
+                }
+
             }
 
         }

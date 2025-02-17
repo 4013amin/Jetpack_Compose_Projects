@@ -18,7 +18,7 @@ class Submit_Page : androidx.activity.ComponentActivity() {
         }
     }
 }
-
+    
 @Composable
 fun VerificationCodeScreen() {
     Row(
@@ -26,7 +26,6 @@ fun VerificationCodeScreen() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly // یا Arrangement.CenterHorizontally
     ) {
-        // چندین دکمه گرد
         repeat(4) {
             RoundedButton(
                 text = "Button $it",
