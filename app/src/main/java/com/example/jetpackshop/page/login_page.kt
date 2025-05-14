@@ -18,14 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.jetpackshop.R // مطمئن شوید که مسیر پکیج درست است
+import com.example.jetpackshop.R
 
 @Composable
 fun UserProfile() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFE3F2FD)) // Background color for the entire screen
+            .background(color = Color(0xFFE3F2FD))
             .padding(16.dp)
     ) {
         Image(
@@ -33,7 +33,7 @@ fun UserProfile() {
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(120.dp)
-                .clip(CircleShape) // Circular image
+                .clip(CircleShape)
                 .align(Alignment.CenterHorizontally),
             contentScale = ContentScale.Crop
         )
@@ -63,8 +63,8 @@ fun UserProfile() {
                 .fillMaxWidth()
                 .padding(top = 16.dp)
                 .background(color = Color.White)
-                .padding(16.dp), // Padding inside the notifications area
-            verticalArrangement = Arrangement.spacedBy(8.dp) // Space between notifications
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             repeat(4) {
                 NotificationItem()
