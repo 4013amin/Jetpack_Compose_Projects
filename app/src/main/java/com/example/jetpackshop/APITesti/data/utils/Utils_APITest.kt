@@ -1,23 +1,20 @@
-package com.example.jetpackshop.newProject.data.Utils
+package com.example.jetpackshop.APITesti.data.utils
 
-import com.example.jetpackshop.newProject.data.Api.ApiNew
+import com.example.jetpackshop.APITesti.data.apis.APITesti
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
-
 
 const val baseNewUrl = "http://192.168.1.105:8000/"
 
-object RetrofitNewInctance {
+
+object Utils_APITest {
 
 
-    val api by lazy {
+    val API by lazy {
         Retrofit.Builder()
             .baseUrl(baseNewUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(ApiNew::class.java)
+            .create(APITesti::class.java)
     }
-
-
 }
