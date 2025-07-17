@@ -29,4 +29,19 @@ class ViewModelApi(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    fun getAllProduct() {
+        viewModelScope.launch {
+            var response = try {
+                Utils_APITest.API.getAllProduct()
+            } catch (e: IOException) {
+                return@launch
+            } catch (e: HttpException) {
+                return@launch
+            }
+            if (response.isSuccessful && response.body() != null) {
+                data.value = response.body()!!
+            }
+        }
+    }
 }

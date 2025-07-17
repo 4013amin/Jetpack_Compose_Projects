@@ -2,6 +2,7 @@ package com.example.jetpackshop.APITesti.data.apis
 
 import com.example.jetpackshop.APITesti.data.models.OTPModel
 import retrofit2.Response
+import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Part
 
@@ -12,5 +13,8 @@ interface APITesti {
         @Part("phone_number") phone_number: String,
     ): Response<OTPModel>
 
+
+    @GET("")
+    suspend fun getAllProduct(): Response<OTPModel>
 
 }
